@@ -178,86 +178,9 @@ export function WorkDetailClient({ workId }: WorkDetailClientProps) {
                 checkpoints={workOrder.checkpoints || []} 
                 onCheckpointClick={handleCheckpointClick}
                 selectedCheckpointId={selectedCheckpoint?.id}
+                onCheckpointAction={handleCheckpointAction}
               />
             </div>
-            
-            {/* Action Buttons - Compact Design */}
-            {workOrder.checkpoints && workOrder.checkpoints.length > 0 && selectedCheckpoint && (
-              <div className="mt-4 md:mt-6">
-                <div className="relative p-4 md:p-6 bg-gradient-to-br from-card via-card/95 to-card/90 border border-primary/20 md:border-2 md:border-primary/30 rounded-xl md:rounded-2xl shadow-lg max-w-2xl mx-auto backdrop-blur-sm overflow-hidden">
-                  {/* Decorative Background - Smaller */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10" />
-                  <div className="absolute top-0 right-0 w-20 h-20 md:w-32 md:h-32 bg-primary/5 rounded-full blur-2xl md:blur-3xl" />
-                  <div className="absolute bottom-0 left-0 w-16 h-16 md:w-24 md:h-24 bg-primary/5 rounded-full blur-xl md:blur-2xl" />
-                  
-                  <div className="relative">
-                    <div className="flex items-center justify-between mb-4 md:mb-5">
-                      <div className="space-y-1.5 md:space-y-2 flex-1 min-w-0">
-                        <div className="flex items-center gap-2 md:gap-3">
-                          <div className="h-1.5 w-1.5 md:h-2 md:w-2 rounded-full bg-primary animate-pulse shrink-0" />
-                          <h3 className="text-base md:text-xl lg:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent truncate">
-                            {selectedCheckpoint.name}
-                          </h3>
-                        </div>
-                        <p className="text-xs md:text-sm text-muted-foreground flex items-center gap-1.5 md:gap-2 ml-3.5 md:ml-5 flex-wrap">
-                          <span className="px-1.5 md:px-2 py-0.5 md:py-1 rounded-md bg-primary/10 text-primary text-[10px] md:text-xs font-medium">
-                            {selectedCheckpoint.ownerDept.name}
-                          </span>
-                          <span>•</span>
-                          <span>ลำดับที่ {selectedCheckpoint.order}</span>
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-2 md:gap-3 flex-wrap">
-                      {selectedCheckpoint.status === 'PENDING' && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleCheckpointAction(selectedCheckpoint.id, 'start')}
-                          className="group relative overflow-hidden bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md hover:shadow-lg transition-all duration-300 text-xs md:text-sm"
-                        >
-                          <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                          <Play className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1.5 md:mr-2 relative z-10" />
-                          <span className="relative z-10 font-semibold">เริ่มดำเนินการ</span>
-                        </Button>
-                      )}
-                      {selectedCheckpoint.status === 'PROCESSING' && (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="default"
-                            onClick={() => handleCheckpointAction(selectedCheckpoint.id, 'complete')}
-                            className="group relative overflow-hidden bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-600 text-white shadow-md hover:shadow-lg transition-all duration-300 text-xs md:text-sm"
-                          >
-                            <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                            <CheckCircle className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1.5 md:mr-2 relative z-10" />
-                            <span className="relative z-10 font-semibold">เสร็จสิ้น</span>
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleCheckpointAction(selectedCheckpoint.id, 'return')}
-                            className="group relative overflow-hidden border hover:border-yellow-500/50 hover:bg-yellow-500/10 transition-all duration-300 text-xs md:text-sm"
-                          >
-                            <RotateCcw className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1.5 md:mr-2 group-hover:rotate-180 transition-transform duration-300" />
-                            <span className="font-semibold">ส่งกลับ</span>
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleCheckpointAction(selectedCheckpoint.id, 'problem')}
-                            className="group relative overflow-hidden border hover:border-red-500/50 hover:bg-red-500/10 transition-all duration-300 text-xs md:text-sm"
-                          >
-                            <AlertCircle className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1.5 md:mr-2 group-hover:animate-pulse" />
-                            <span className="font-semibold">แจ้งปัญหา</span>
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 

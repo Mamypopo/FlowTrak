@@ -2,7 +2,8 @@
 
 import { Checkpoint } from '@/types'
 import { Badge } from '@/components/ui/badge'
-import { CheckCircle2, Clock, AlertCircle, RotateCcw, TrendingUp, Sparkles } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { CheckCircle2, Clock, AlertCircle, RotateCcw, TrendingUp, Sparkles, Play } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { th } from 'date-fns/locale'
@@ -11,6 +12,7 @@ interface TimelineProps {
   checkpoints: Checkpoint[]
   onCheckpointClick?: (checkpoint: Checkpoint) => void
   selectedCheckpointId?: string
+  onCheckpointAction?: (checkpointId: string, action: string) => void
 }
 
 const statusConfig = {
@@ -71,7 +73,7 @@ const statusConfig = {
   },
 }
 
-export function Timeline({ checkpoints, onCheckpointClick, selectedCheckpointId }: TimelineProps) {
+export function Timeline({ checkpoints, onCheckpointClick, selectedCheckpointId, onCheckpointAction }: TimelineProps) {
   if (!checkpoints || checkpoints.length === 0) {
     return (
       <div className="w-full p-12 text-center">
@@ -215,6 +217,66 @@ export function Timeline({ checkpoints, onCheckpointClick, selectedCheckpointId 
                             </p>
                           </div>
                         )}
+                      </div>
+                    )}
+
+                    {/* Action Buttons - Inline & Compact */}
+                    {isSelected && onCheckpointAction && (
+                      <div className="mt-4 pt-3 border-t border-border/50">
+                        <div className="flex items-center justify-center gap-2 flex-wrap">
+                          {checkpoint.status === 'PENDING' && (
+                            <Button
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                onCheckpointAction(checkpoint.id, 'start')
+                              }}
+                              className="h-8 px-3 text-xs bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-sm"
+                            >
+                              <Play className="h-3 w-3 mr-1.5" />
+                              เริ่ม
+                            </Button>
+                          )}
+                          {checkpoint.status === 'PROCESSING' && (
+                            <>
+                              <Button
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  onCheckpointAction(checkpoint.id, 'complete')
+                                }}
+                                className="h-8 px-3 text-xs bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-600 text-white shadow-sm"
+                              >
+                                <CheckCircle2 className="h-3 w-3 mr-1.5" />
+                                เสร็จ
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  onCheckpointAction(checkpoint.id, 'return')
+                                }}
+                                className="h-8 px-3 text-xs border-yellow-500/50 hover:border-yellow-500 hover:bg-yellow-500/10"
+                              >
+                                <RotateCcw className="h-3 w-3 mr-1.5" />
+                                ส่งกลับ
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  onCheckpointAction(checkpoint.id, 'problem')
+                                }}
+                                className="h-8 px-3 text-xs border-red-500/50 hover:border-red-500 hover:bg-red-500/10"
+                              >
+                                <AlertCircle className="h-3 w-3 mr-1.5" />
+                                ปัญหา
+                              </Button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>

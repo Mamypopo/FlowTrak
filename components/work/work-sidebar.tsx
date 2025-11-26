@@ -51,26 +51,26 @@ const getWorkProgress = (work: WorkOrder) => {
 const statusConfig = {
   PENDING: { 
     icon: Clock, 
-    color: 'text-gray-500',
-    bgColor: 'bg-gray-500/10',
+    color: 'text-gray-500 dark:text-gray-400',
+    bgColor: 'bg-gray-500/10 dark:bg-gray-500/20',
     label: 'รอ' 
   },
   PROCESSING: { 
     icon: TrendingUp, 
-    color: 'text-blue-500',
-    bgColor: 'bg-blue-500/10',
+    color: 'text-blue-500 dark:text-blue-400',
+    bgColor: 'bg-blue-500/10 dark:bg-blue-500/20',
     label: 'กำลัง' 
   },
   COMPLETED: { 
     icon: CheckCircle2, 
-    color: 'text-green-500',
-    bgColor: 'bg-green-500/10',
+    color: 'text-green-500 dark:text-green-400',
+    bgColor: 'bg-green-500/10 dark:bg-green-500/20',
     label: 'เสร็จ' 
   },
   PROBLEM: { 
     icon: AlertTriangle, 
-    color: 'text-red-500',
-    bgColor: 'bg-red-500/10',
+    color: 'text-red-500 dark:text-red-400',
+    bgColor: 'bg-red-500/10 dark:bg-red-500/20',
     label: 'ปัญหา' 
   },
 }

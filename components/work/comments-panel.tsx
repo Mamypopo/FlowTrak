@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useTheme } from 'next-themes'
 import { Comment, Checkpoint, WorkOrder } from '@/types'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import EmojiPicker, { EmojiClickData } from 'emoji-picker-react'
+import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react'
 import { format } from 'date-fns'
 import { th } from 'date-fns/locale'
 import { 
@@ -63,6 +64,7 @@ const statusConfig = {
 }
 
 export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelProps) {
+  const { theme, resolvedTheme } = useTheme()
   const [activeTab, setActiveTab] = useState<'work' | 'checkpoint'>('work')
   const [workComments, setWorkComments] = useState<Comment[]>([])
   const [checkpointComments, setCheckpointComments] = useState<Comment[]>([])
@@ -257,12 +259,14 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
   const renderComments = (comments: Comment[]) => {
     if (comments.length === 0) {
       return (
-        <div className="text-center py-12">
-          <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-sm text-muted-foreground">
+        <div className="flex flex-col items-center justify-center py-16">
+          <div className="h-16 w-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+            <MessageSquare className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <p className="text-sm font-medium text-muted-foreground mb-1">
             ยังไม่มีคอมเมนต์
           </p>
-          <p className="text-xs text-muted-foreground mt-2">
+          <p className="text-xs text-muted-foreground/80">
             เป็นคนแรกที่คอมเมนต์{activeTab === 'work' ? 'ในงานนี้' : 'ใน checkpoint นี้'}
           </p>
         </div>
@@ -270,19 +274,19 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
     }
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         {comments.map((comment) => (
-          <div key={comment.id} className="flex gap-4 group">
-            <Avatar className="h-10 w-10 shrink-0 ring-2 ring-background">
-              <AvatarFallback className="bg-primary/10 text-primary">
+          <div key={comment.id} className="flex gap-3 group hover:bg-muted/30 rounded-xl p-3 -mx-3 transition-colors">
+            <Avatar className="h-10 w-10 shrink-0 ring-2 ring-background shadow-sm">
+              <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold">
                 <User className="h-5 w-5" />
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1 space-y-2 min-w-0">
+            <div className="flex-1 space-y-2.5 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-semibold text-sm">{comment.user.name}</span>
+                <span className="font-semibold text-sm text-foreground">{comment.user.name}</span>
                 {comment.checkpoint && (
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" className="text-xs border-primary/20 bg-primary/5 text-primary">
                     {comment.checkpoint.name}
                   </Badge>
                 )}
@@ -291,7 +295,7 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
                 </span>
               </div>
               {comment.message && (
-                <div className="bg-muted/50 rounded-2xl rounded-tl-sm px-4 py-3 text-sm leading-relaxed break-words">
+                <div className="bg-gradient-to-br from-muted/60 to-muted/40 rounded-2xl rounded-tl-sm px-4 py-3 text-sm leading-relaxed break-words border border-border/50 shadow-sm">
                   {comment.message}
                 </div>
               )}
@@ -300,10 +304,10 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
                   href={comment.fileUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-sm text-primary hover:underline p-3 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors"
+                  className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 p-3 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 hover:from-primary/15 hover:to-primary/10 border border-primary/20 hover:border-primary/30 transition-all shadow-sm hover:shadow-md"
                 >
                   <Paperclip className="h-4 w-4" />
-                  <span>ไฟล์แนบ</span>
+                  <span className="font-medium">ไฟล์แนบ</span>
                 </a>
               )}
             </div>
@@ -441,43 +445,48 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
               </div>
 
               {/* Emoji Picker & Send Button */}
-              {message.trim() || file ? (
-                <Button
-                  type="submit"
-                  size="sm"
-                  className="h-8 px-3 rounded-lg shrink-0 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm hover:shadow-md transition-all"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              ) : (
+              <div className="flex items-center gap-1.5 shrink-0">
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-8 w-8 p-0 shrink-0 rounded-lg hover:bg-primary/10 transition-colors"
+                      className="h-8 w-8 p-0 rounded-lg hover:bg-primary/10 transition-colors"
                     >
                       <Smile className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent 
-                    className="w-auto p-0 border-0 shadow-lg"
+                    className="w-auto p-0 border-0 shadow-lg z-50"
                     side="top"
                     align="end"
                     sideOffset={8}
+                    onOpenAutoFocus={(e) => e.preventDefault()}
                   >
                     <EmojiPicker
                       onEmojiClick={handleEmojiClick}
                       width={350}
                       height={400}
+                      theme={(resolvedTheme || theme || 'light') as Theme}
                       previewConfig={{ showPreview: false }}
                       skinTonesDisabled
                       searchDisabled={false}
+                      lazyLoadEmojis
                     />
                   </PopoverContent>
                 </Popover>
-              )}
+                
+                {(message.trim() || file) && (
+                  <Button
+                    type="submit"
+                    size="sm"
+                    className="h-8 px-3 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm hover:shadow-md transition-all"
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </div>
           </form>
         </div>
