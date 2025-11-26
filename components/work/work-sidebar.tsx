@@ -129,7 +129,7 @@ export function WorkSidebar({ selectedWorkId, onSelectWork }: WorkSidebarProps) 
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
+    <div className="h-full flex flex-col bg-background py-4 pl-4 pr-3">
       {/* Compact Header */}
       <div className="mb-3">
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">

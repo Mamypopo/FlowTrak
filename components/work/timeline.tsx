@@ -2,7 +2,6 @@
 
 import { Checkpoint } from '@/types'
 import { Badge } from '@/components/ui/badge'
-import { Card } from '@/components/ui/card'
 import { CheckCircle2, Clock, AlertCircle, RotateCcw, TrendingUp, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
@@ -144,27 +143,19 @@ export function Timeline({ checkpoints, onCheckpointClick, selectedCheckpointId 
                   </div>
                 )}
 
-                {/* Checkpoint Card */}
-                <Card
+                {/* Checkpoint Item */}
+                <div
                   className={cn(
-                    "relative flex flex-col items-center w-56 p-4 group cursor-pointer transition-all duration-300",
-                    "border-2 hover:shadow-lg",
-                    config.bgColor,
-                    config.borderColor,
-                    isSelected && "ring-2 ring-primary ring-offset-2 shadow-xl scale-105",
-                    !isSelected && onCheckpointClick && "hover:scale-105 hover:shadow-md",
-                    isCompleted && "border-green-400/50",
-                    isProcessing && "border-blue-400/50"
+                    "relative flex flex-col items-center w-64 p-5",
+                    onCheckpointClick && "cursor-pointer"
                   )}
                   onClick={() => onCheckpointClick?.(checkpoint)}
                 >
                   {/* Icon Circle with enhanced styling */}
                   <div className={cn(
-                    "relative z-10 flex h-14 w-14 items-center justify-center rounded-full border-2 transition-all duration-300 mb-3",
+                    "relative z-10 flex h-14 w-14 items-center justify-center rounded-full border-2 mb-3",
                     config.iconBg,
                     config.borderColor,
-                    isSelected && "ring-4 ring-primary/30 scale-110",
-                    onCheckpointClick && "group-hover:scale-110",
                     isCompleted && "shadow-lg",
                     isProcessing && config.glow
                   )}>
@@ -189,23 +180,9 @@ export function Timeline({ checkpoints, onCheckpointClick, selectedCheckpointId 
                     )}
                   </div>
 
-                  {/* Order Badge */}
-                  <div className={cn(
-                    "absolute -top-2 -left-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
-                    isCompleted 
-                      ? "bg-green-500 text-white" 
-                      : isProcessing 
-                      ? "bg-blue-500 text-white" 
-                      : "bg-muted text-muted-foreground"
-                  )}>
-                    {index + 1}
-                  </div>
 
                   {/* Content */}
-                  <div className={cn(
-                    "w-full text-center space-y-2 transition-all duration-200",
-                    isSelected && "scale-105"
-                  )}>
+                  <div className="w-full text-center space-y-2">
                     <h4 className={cn(
                       "text-sm font-bold line-clamp-2 transition-colors leading-tight",
                       isSelected ? "text-primary" : "text-foreground"
@@ -258,11 +235,7 @@ export function Timeline({ checkpoints, onCheckpointClick, selectedCheckpointId 
                     )}
                   </div>
 
-                  {/* Hover effect overlay */}
-                  {onCheckpointClick && (
-                    <div className="absolute inset-0 rounded-lg bg-primary/0 group-hover:bg-primary/5 transition-colors pointer-events-none" />
-                  )}
-                </Card>
+                </div>
               </div>
             )
           })}

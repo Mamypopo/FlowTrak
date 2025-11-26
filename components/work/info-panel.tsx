@@ -88,7 +88,7 @@ export function InfoPanel({ workOrder }: InfoPanelProps) {
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
+    <div className="h-full flex flex-col bg-background py-4 pl-3 pr-4">
       {/* Compact Header */}
       <div className="mb-3">
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">

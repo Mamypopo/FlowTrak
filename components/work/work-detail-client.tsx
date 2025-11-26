@@ -228,15 +228,13 @@ export function WorkDetailClient({ workId }: WorkDetailClientProps) {
         </div>
 
         {/* Bottom Section: Job (20%) | Comment (60%) | Info (20%) - Best UX */}
-        <div className="flex-1 flex overflow-hidden bg-background">
+        <div className="flex-1 flex overflow-hidden bg-background ">
           {/* Left - Job List (20% - Compact) */}
           <div className="w-[20%] min-w-[240px] shrink-0 hidden lg:block border-r bg-muted/30">
-            <div className="h-full py-4 pl-4 pr-3">
-              <WorkSidebar
-                selectedWorkId={workId}
-                onSelectWork={handleSelectWork}
-              />
-            </div>
+            <WorkSidebar
+              selectedWorkId={workId}
+              onSelectWork={handleSelectWork}
+            />
           </div>
 
           {/* Center - Comments (60% - Main Focus) */}
@@ -250,9 +248,7 @@ export function WorkDetailClient({ workId }: WorkDetailClientProps) {
 
           {/* Right - Info (20% - Compact) */}
           <div className="w-[20%] min-w-[260px] shrink-0 hidden xl:block border-l bg-muted/20">
-            <div className="h-full py-4 pl-3 pr-4">
-              <InfoPanel workOrder={workOrder} />
-            </div>
+            <InfoPanel workOrder={workOrder} />
           </div>
         </div>
 
