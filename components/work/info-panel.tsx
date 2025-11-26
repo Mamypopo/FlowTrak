@@ -106,30 +106,50 @@ export function InfoPanel({ workOrder }: InfoPanelProps) {
         <h2 className="text-base font-bold line-clamp-2 leading-tight">{workOrder.title}</h2>
       </div>
 
-      <Card className="flex-1 flex flex-col rounded-lg border shadow-sm min-h-0">
+      <Card className="flex-1 flex flex-col rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm shadow-lg min-h-0 overflow-hidden">
         <Tabs defaultValue="details" className="flex-1 flex flex-col overflow-hidden min-h-0">
-          <div className="px-3 pt-3 border-b shrink-0">
-            <TabsList className="grid w-full grid-cols-3 h-8">
-              <TabsTrigger value="details" className="text-xs">รายละเอียด</TabsTrigger>
-              <TabsTrigger value="files" className="text-xs">ไฟล์</TabsTrigger>
-              <TabsTrigger value="activity" className="text-xs">Log</TabsTrigger>
+          <div className="px-3 pt-3 border-b border-border/50 bg-muted/20 shrink-0">
+            <TabsList className="grid w-full grid-cols-3 h-9 bg-transparent gap-1">
+              <TabsTrigger 
+                value="details" 
+                className="text-xs data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-lg transition-all"
+              >
+                <FileText className="h-3 w-3 mr-1.5" />
+                รายละเอียด
+              </TabsTrigger>
+              <TabsTrigger 
+                value="files" 
+                className="text-xs data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-lg transition-all"
+              >
+                <Download className="h-3 w-3 mr-1.5" />
+                ไฟล์
+              </TabsTrigger>
+              <TabsTrigger 
+                value="activity" 
+                className="text-xs data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-lg transition-all"
+              >
+                <Activity className="h-3 w-3 mr-1.5" />
+                Log
+              </TabsTrigger>
             </TabsList>
           </div>
 
-          <TabsContent value="details" className="flex-1 overflow-y-auto px-3 py-3 space-y-3 min-h-0">
+          <TabsContent value="details" className="flex-1 overflow-y-auto px-4 py-4 space-y-3 min-h-0">
+            {/* Company */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <Building2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                <span className="text-xs font-semibold">บริษัท</span>
+                <span className="text-xs font-semibold text-foreground">บริษัท</span>
               </div>
               <p className="text-xs text-muted-foreground pl-5.5">{workOrder.company}</p>
             </div>
 
+            {/* Description */}
             {workOrder.description && (
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
                   <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                  <span className="text-xs font-semibold">รายละเอียด</span>
+                  <span className="text-xs font-semibold text-foreground">รายละเอียด</span>
                 </div>
                 <p className="text-xs text-muted-foreground whitespace-pre-wrap pl-5.5 leading-relaxed">
                   {workOrder.description}
@@ -137,17 +157,19 @@ export function InfoPanel({ workOrder }: InfoPanelProps) {
               </div>
             )}
 
+            {/* Priority Badge */}
             <div className="space-y-1.5">
-              <Badge className={cn("text-xs", priorityColors[workOrder.priority])}>
+              <Badge className={cn("text-xs border", priorityColors[workOrder.priority])}>
                 {priorityLabels[workOrder.priority]}
               </Badge>
             </div>
 
+            {/* Deadline */}
             {workOrder.deadline && (
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
                   <Clock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                  <span className="text-xs font-semibold">กำหนดส่ง</span>
+                  <span className="text-xs font-semibold text-foreground">กำหนดส่ง</span>
                 </div>
                 <p className="text-xs text-muted-foreground pl-5.5">
                   {format(new Date(workOrder.deadline), 'dd MMM yyyy HH:mm', { locale: th })}
@@ -155,10 +177,11 @@ export function InfoPanel({ workOrder }: InfoPanelProps) {
               </div>
             )}
 
+            {/* Created By */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <User className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                <span className="text-xs font-semibold">สร้างโดย</span>
+                <span className="text-xs font-semibold text-foreground">สร้างโดย</span>
               </div>
               <p className="text-xs text-muted-foreground pl-5.5">{workOrder.createdBy?.name || 'ไม่ทราบ'}</p>
               <p className="text-[10px] text-muted-foreground pl-5.5">
@@ -166,10 +189,11 @@ export function InfoPanel({ workOrder }: InfoPanelProps) {
               </p>
             </div>
 
+            {/* Checkpoints Count */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <Activity className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                <span className="text-xs font-semibold">Checkpoints</span>
+                <span className="text-xs font-semibold text-foreground">Checkpoints</span>
               </div>
               <p className="text-xs text-muted-foreground pl-5.5">
                 {workOrder.checkpoints?.length || 0} จุดตรวจ
@@ -177,42 +201,55 @@ export function InfoPanel({ workOrder }: InfoPanelProps) {
             </div>
           </TabsContent>
 
-          <TabsContent value="files" className="flex-1 overflow-y-auto px-3 py-3 min-h-0">
+          <TabsContent value="files" className="flex-1 overflow-y-auto px-4 py-4 min-h-0">
             {workOrder.attachments && workOrder.attachments.length > 0 ? (
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 {workOrder.attachments.map((attachment) => (
                   <div
                     key={attachment.id}
-                    className="flex items-center justify-between p-2 border rounded-lg hover:bg-muted/50 transition-colors text-xs"
+                    className="group flex items-center justify-between p-3 rounded-lg border border-border/50 bg-card/50 hover:bg-card hover:border-primary/30 hover:shadow-md transition-all duration-200"
                   >
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <FileText className="h-3.5 w-3.5 shrink-0" />
-                      <span className="truncate">{attachment.url.split('/').pop()}</span>
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+                        <FileText className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-foreground truncate">
+                          {attachment.url.split('/').pop()}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">ไฟล์แนบ</p>
+                      </div>
                     </div>
-                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 w-8 p-0 shrink-0 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors" 
+                      asChild
+                    >
                       <a href={attachment.url} target="_blank" rel="noopener noreferrer">
-                        <Download className="h-3.5 w-3.5" />
+                        <Download className="h-4 w-4" />
                       </a>
                     </Button>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8">
-                <FileText className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-xs text-muted-foreground">
-                  ยังไม่มีไฟล์แนบ
-                </p>
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="h-16 w-16 rounded-full bg-muted/50 flex items-center justify-center mb-3">
+                  <FileText className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <p className="text-sm font-medium text-muted-foreground mb-1">ยังไม่มีไฟล์แนบ</p>
+                <p className="text-xs text-muted-foreground/80">เพิ่มไฟล์แนบเพื่อให้ข้อมูลครบถ้วน</p>
               </div>
             )}
           </TabsContent>
 
-          <TabsContent value="activity" className="flex-1 overflow-y-auto px-3 py-3 min-h-0">
+          <TabsContent value="activity" className="flex-1 overflow-y-auto px-4 py-4 min-h-0">
             {isLoading ? (
               <div className="space-y-3">
                 {[...Array(5)].map((_, i) => (
-                  <div key={i} className="border-l-2 border-muted pl-3 pb-3 animate-pulse">
-                    <div className="flex items-center gap-2 mb-1">
+                  <div key={i} className="border-l-2 border-muted pl-4 pb-4 animate-pulse">
+                    <div className="flex items-center gap-2 mb-2">
                       <div className="h-3 w-20 bg-muted rounded" />
                       <div className="h-2.5 w-24 bg-muted rounded" />
                     </div>
@@ -223,27 +260,49 @@ export function InfoPanel({ workOrder }: InfoPanelProps) {
               </div>
             ) : activityLogs.length > 0 ? (
               <div className="space-y-3">
-                {activityLogs.map((log) => (
-                  <div key={log.id} className="border-l-2 border-primary/30 pl-3 pb-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-semibold">{log.user?.name || 'ไม่ทราบ'}</span>
-                      <span className="text-[10px] text-muted-foreground">
-                        {format(new Date(log.createdAt), 'dd MMM HH:mm', { locale: th })}
-                      </span>
-                    </div>
-                    <p className="text-xs font-medium">{log.action}</p>
-                    {log.details && (
-                      <p className="text-[10px] text-muted-foreground mt-1">{log.details}</p>
+                {activityLogs.map((log, index) => (
+                  <div 
+                    key={log.id} 
+                    className="relative pl-4 pb-4 group"
+                  >
+                    {/* Timeline Line */}
+                    {index !== activityLogs.length - 1 && (
+                      <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary/30 to-transparent" />
                     )}
+                    
+                    {/* Timeline Dot */}
+                    <div className="absolute left-0 top-1.5 -translate-x-1/2">
+                      <div className="h-3 w-3 rounded-full bg-primary border-2 border-background shadow-sm group-hover:scale-125 transition-transform" />
+                    </div>
+
+                    {/* Content */}
+                    <div className="pl-4">
+                      <div className="p-3 rounded-lg bg-muted/30 border border-border/50 hover:bg-muted/50 hover:border-primary/20 transition-all duration-200">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                            <User className="h-3.5 w-3.5 text-primary" />
+                          </div>
+                          <span className="text-xs font-semibold text-foreground">{log.user?.name || 'ไม่ทราบ'}</span>
+                          <span className="text-[10px] text-muted-foreground">
+                            {format(new Date(log.createdAt), 'dd MMM HH:mm', { locale: th })}
+                          </span>
+                        </div>
+                        <p className="text-xs font-medium text-foreground mb-1">{log.action}</p>
+                        {log.details && (
+                          <p className="text-[10px] text-muted-foreground leading-relaxed">{log.details}</p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8">
-                <Activity className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-xs text-muted-foreground">
-                  ยังไม่มี activity log
-                </p>
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="h-16 w-16 rounded-full bg-muted/50 flex items-center justify-center mb-3">
+                  <Activity className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <p className="text-sm font-medium text-muted-foreground mb-1">ยังไม่มี activity log</p>
+                <p className="text-xs text-muted-foreground/80">กิจกรรมจะแสดงที่นี่เมื่อมีการดำเนินการ</p>
               </div>
             )}
           </TabsContent>
