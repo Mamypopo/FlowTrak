@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTheme } from 'next-themes'
-import { Comment, Checkpoint, WorkOrder } from '@/types'
+import { Comment, Checkpoint, WorkOrder, User as UserType } from '@/types'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -24,7 +24,9 @@ import {
   Smile,
   Image as ImageIcon,
   FileText,
-  X
+  X,
+  Reply,
+  AtSign
 } from 'lucide-react'
 import { useSocket } from '@/lib/socket-client'
 import { cn } from '@/lib/utils'
@@ -74,6 +76,11 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
   const [isFocused, setIsFocused] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [pendingCommentIds, setPendingCommentIds] = useState<Set<string>>(new Set())
+  const [replyingTo, setReplyingTo] = useState<Comment | null>(null)
+  const [users, setUsers] = useState<UserType[]>([])
+  const [mentionQuery, setMentionQuery] = useState('')
+  const [showMentionSuggestions, setShowMentionSuggestions] = useState(false)
+  const [mentionPosition, setMentionPosition] = useState({ start: 0, end: 0 })
   const socket = useSocket()
   const commentsEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -106,6 +113,22 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
     }
   }
 
+  const fetchUsers = async () => {
+    try {
+      const res = await fetch('/api/admin/user')
+      const data = await res.json()
+      if (data.users) {
+        setUsers(data.users)
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchUsers()
+  }, [])
+
   useEffect(() => {
     if (activeTab === 'work') {
       fetchWorkComments()
@@ -127,22 +150,41 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
       return
     }
 
+    // Helper function to add comment to list (handles replies)
+    const addCommentToList = (comments: Comment[], comment: Comment): Comment[] => {
+      // ตรวจสอบว่า comment นี้มีอยู่แล้วหรือไม่ (ป้องกันการซ้ำ)
+      if (comments.some(c => c.id === comment.id)) {
+        return comments
+      }
+
+      // If it's a reply, add to parent's replies
+      if (comment.parentId) {
+        return comments.map(c => {
+          if (c.id === comment.parentId) {
+            return {
+              ...c,
+              replies: [...(c.replies || []), comment]
+            }
+          }
+          // Recursively check replies
+          if (c.replies && c.replies.length > 0) {
+            return {
+              ...c,
+              replies: addCommentToList(c.replies, comment)
+            }
+          }
+          return c
+        })
+      }
+
+      // Top-level comment
+      return [...comments, comment]
+    }
+
     if (newComment.workId === workId && !newComment.checkpointId) {
-      setWorkComments((prev) => {
-        // ตรวจสอบว่า comment นี้มีอยู่แล้วหรือไม่ (ป้องกันการซ้ำ)
-        if (prev.some(comment => comment.id === newComment.id)) {
-          return prev
-        }
-        return [...prev, newComment]
-      })
+      setWorkComments((prev) => addCommentToList(prev, newComment))
     } else if (newComment.checkpointId === checkpoint?.id) {
-      setCheckpointComments((prev) => {
-        // ตรวจสอบว่า comment นี้มีอยู่แล้วหรือไม่ (ป้องกันการซ้ำ)
-        if (prev.some(comment => comment.id === newComment.id)) {
-          return prev
-        }
-        return [...prev, newComment]
-      })
+      setCheckpointComments((prev) => addCommentToList(prev, newComment))
     }
   }, [workId, checkpoint?.id, pendingCommentIds])
 
@@ -171,6 +213,19 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
     }
   }, [message])
 
+  // Extract mentions from message (@username)
+  const extractMentions = (text: string): string[] => {
+    const mentionRegex = /@(\w+)/g
+    const matches = text.match(mentionRegex)
+    if (!matches) return []
+    
+    return matches.map(match => {
+      const username = match.substring(1) // Remove @
+      const user = users.find(u => u.username === username)
+      return user?.id || ''
+    }).filter(id => id !== '')
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const isWorkComment = activeTab === 'work'
@@ -186,9 +241,17 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
     
     if (message.trim()) {
       formData.append('message', message)
+      // Extract and add mentions
+      const mentionedUserIds = extractMentions(message)
+      if (mentionedUserIds.length > 0) {
+        formData.append('mentionedUserIds', JSON.stringify(mentionedUserIds))
+      }
     }
     if (file) {
       formData.append('file', file)
+    }
+    if (replyingTo) {
+      formData.append('parentId', replyingTo.id)
     }
 
     try {
@@ -226,6 +289,8 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
         setMessage('')
         setFile(null)
         setFileName('')
+        setReplyingTo(null)
+        setShowMentionSuggestions(false)
         
         // ไม่ต้อง emit socket event กลับไป เพราะ server จะ broadcast ให้เอง
         // handleCommentNew จะข้าม comment นี้เพราะอยู่ใน pendingCommentIds
@@ -256,6 +321,143 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
     textareaRef.current?.focus()
   }
 
+  const handleReplyClick = (comment: Comment) => {
+    setReplyingTo(comment)
+    setMessage(`@${comment.user.username} `)
+    textareaRef.current?.focus()
+  }
+
+  const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value
+    setMessage(value)
+    
+    // Check for @ mention
+    const cursorPos = e.target.selectionStart
+    const textBeforeCursor = value.substring(0, cursorPos)
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@')
+    
+    if (lastAtIndex !== -1) {
+      const textAfterAt = textBeforeCursor.substring(lastAtIndex + 1)
+      // Check if there's no space after @ (meaning we're typing a mention)
+      if (!textAfterAt.includes(' ') && !textAfterAt.includes('\n')) {
+        setMentionQuery(textAfterAt)
+        setShowMentionSuggestions(true)
+        setMentionPosition({ start: lastAtIndex, end: cursorPos })
+      } else {
+        setShowMentionSuggestions(false)
+      }
+    } else {
+      setShowMentionSuggestions(false)
+    }
+  }
+
+  const insertMention = (user: UserType) => {
+    if (!textareaRef.current) return
+    
+    const beforeMention = message.substring(0, mentionPosition.start)
+    const afterMention = message.substring(mentionPosition.end)
+    const newMessage = `${beforeMention}@${user.username} ${afterMention}`
+    
+    setMessage(newMessage)
+    setShowMentionSuggestions(false)
+    
+    // Focus and set cursor position
+    setTimeout(() => {
+      textareaRef.current?.focus()
+      const newCursorPos = mentionPosition.start + user.username.length + 2 // @ + username + space
+      textareaRef.current?.setSelectionRange(newCursorPos, newCursorPos)
+    }, 0)
+  }
+
+  const filteredUsers = users.filter(user => 
+    user.username.toLowerCase().includes(mentionQuery.toLowerCase()) ||
+    user.name.toLowerCase().includes(mentionQuery.toLowerCase())
+  ).slice(0, 5)
+
+  const renderComment = (comment: Comment, isReply = false) => {
+    // Highlight mentions in message
+    const renderMessage = (text: string) => {
+      if (!text) return null
+      const parts = text.split(/(@\w+)/g)
+      return parts.map((part, i) => {
+        if (part.startsWith('@')) {
+          const username = part.substring(1)
+          const user = users.find(u => u.username === username)
+          return (
+            <span key={i} className="text-primary font-medium">
+              {part}
+            </span>
+          )
+        }
+        return <span key={i}>{part}</span>
+      })
+    }
+
+    return (
+      <div key={comment.id} className={cn(
+        "flex gap-3 group hover:bg-muted/30 rounded-xl p-3 -mx-3 transition-colors",
+        isReply && "ml-8 border-l-2 border-primary/20 pl-4"
+      )}>
+        <Avatar className="h-10 w-10 shrink-0 ring-2 ring-background shadow-sm">
+          <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold">
+            <User className="h-5 w-5" />
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1 space-y-2.5 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-semibold text-sm text-foreground">{comment.user.name}</span>
+            {comment.checkpoint && (
+              <Badge variant="outline" className="text-xs border-primary/20 bg-primary/5 text-primary">
+                {comment.checkpoint.name}
+              </Badge>
+            )}
+            {comment.parent && (
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <Reply className="h-3 w-3" />
+                ตอบกลับ {comment.parent.user.name}
+              </span>
+            )}
+            <span className="text-xs text-muted-foreground">
+              {format(new Date(comment.createdAt), 'dd MMM yyyy HH:mm', { locale: th })}
+            </span>
+          </div>
+          {comment.message && (
+            <div className="bg-gradient-to-br from-muted/60 to-muted/40 rounded-2xl rounded-tl-sm px-4 py-3 text-sm leading-relaxed break-words border border-border/50 shadow-sm">
+              {renderMessage(comment.message)}
+            </div>
+          )}
+          {comment.fileUrl && (
+            <a
+              href={comment.fileUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 p-3 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 hover:from-primary/15 hover:to-primary/10 border border-primary/20 hover:border-primary/30 transition-all shadow-sm hover:shadow-md"
+            >
+              <Paperclip className="h-4 w-4" />
+              <span className="font-medium">ไฟล์แนบ</span>
+            </a>
+          )}
+          {!isReply && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleReplyClick(comment)}
+              className="h-7 px-2 text-xs text-muted-foreground hover:text-primary"
+            >
+              <Reply className="h-3 w-3 mr-1.5" />
+              ตอบกลับ
+            </Button>
+          )}
+          {comment.replies && comment.replies.length > 0 && (
+            <div className="space-y-2 mt-2">
+              {comment.replies.map((reply) => renderComment(reply, true))}
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   const renderComments = (comments: Comment[]) => {
     if (comments.length === 0) {
       return (
@@ -275,44 +477,7 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
 
     return (
       <div className="space-y-4">
-        {comments.map((comment) => (
-          <div key={comment.id} className="flex gap-3 group hover:bg-muted/30 rounded-xl p-3 -mx-3 transition-colors">
-            <Avatar className="h-10 w-10 shrink-0 ring-2 ring-background shadow-sm">
-              <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold">
-                <User className="h-5 w-5" />
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 space-y-2.5 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-semibold text-sm text-foreground">{comment.user.name}</span>
-                {comment.checkpoint && (
-                  <Badge variant="outline" className="text-xs border-primary/20 bg-primary/5 text-primary">
-                    {comment.checkpoint.name}
-                  </Badge>
-                )}
-                <span className="text-xs text-muted-foreground">
-                  {format(new Date(comment.createdAt), 'dd MMM yyyy HH:mm', { locale: th })}
-                </span>
-              </div>
-              {comment.message && (
-                <div className="bg-gradient-to-br from-muted/60 to-muted/40 rounded-2xl rounded-tl-sm px-4 py-3 text-sm leading-relaxed break-words border border-border/50 shadow-sm">
-                  {comment.message}
-                </div>
-              )}
-              {comment.fileUrl && (
-                <a
-                  href={comment.fileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 p-3 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 hover:from-primary/15 hover:to-primary/10 border border-primary/20 hover:border-primary/30 transition-all shadow-sm hover:shadow-md"
-                >
-                  <Paperclip className="h-4 w-4" />
-                  <span className="font-medium">ไฟล์แนบ</span>
-                </a>
-              )}
-            </div>
-          </div>
-        ))}
+        {comments.map((comment) => renderComment(comment))}
         <div ref={commentsEndRef} />
       </div>
     )
@@ -432,16 +597,61 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
 
               {/* Textarea */}
               <div className="flex-1 relative min-w-0">
+                {replyingTo && (
+                  <div className="mb-2 p-2 bg-primary/5 border border-primary/20 rounded-lg text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-primary flex items-center gap-1.5">
+                        <Reply className="h-3 w-3" />
+                        ตอบกลับ {replyingTo.user.name}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setReplyingTo(null)
+                          setMessage('')
+                        }}
+                        className="h-5 w-5 p-0 hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 <textarea
                   ref={textareaRef}
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  onChange={handleMessageChange}
                   onFocus={() => setIsFocused(true)}
-                  onBlur={() => setIsFocused(false)}
+                  onBlur={() => {
+                    setIsFocused(false)
+                    // Delay hiding suggestions to allow clicking on them
+                    setTimeout(() => setShowMentionSuggestions(false), 200)
+                  }}
                   placeholder={activeTab === 'work' ? 'เขียนคอมเมนต์ในงาน...' : 'เขียนคอมเมนต์ใน checkpoint...'}
                   className="w-full resize-none bg-transparent border-0 focus:outline-none text-sm placeholder:text-muted-foreground/60 max-h-[120px] overflow-y-auto leading-relaxed"
                   rows={1}
                 />
+                {/* Mention Suggestions */}
+                {showMentionSuggestions && filteredUsers.length > 0 && (
+                  <div className="absolute bottom-full left-0 mb-2 w-64 bg-popover border border-border rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+                    {filteredUsers.map((user) => (
+                      <button
+                        key={user.id}
+                        type="button"
+                        onClick={() => insertMention(user)}
+                        className="w-full px-3 py-2 text-left hover:bg-accent flex items-center gap-2 text-sm"
+                      >
+                        <AtSign className="h-4 w-4 text-muted-foreground" />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium truncate">{user.name}</div>
+                          <div className="text-xs text-muted-foreground truncate">@{user.username}</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Emoji Picker & Send Button */}

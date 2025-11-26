@@ -89,11 +89,16 @@ model Comment {
   user          User @relation(fields: [userId], references: [id])
   message       String?
   fileUrl       String?
+  parentId      String?
+  parent        Comment? @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies       Comment[] @relation("Replies")
+  mentionedUserIds String[] @default([])
   createdAt     DateTime @default(now())
 
   @@index([checkpointId])
   @@index([workId])
   @@index([userId])
+  @@index([parentId])
   @@index([createdAt])
 }
 

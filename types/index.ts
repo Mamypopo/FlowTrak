@@ -60,6 +60,11 @@ export interface Comment {
   user: User
   message?: string
   fileUrl?: string
+  parentId?: string | null
+  parent?: Comment
+  replies?: Comment[]
+  mentionedUserIds?: string[]
+  mentionedUsers?: User[]
   createdAt: string
 }
 

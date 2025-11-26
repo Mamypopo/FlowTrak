@@ -9,6 +9,8 @@ const createCommentSchema = z.object({
   workId: z.string().optional(),
   message: z.string().optional(),
   fileUrl: z.string().optional(),
+  parentId: z.string().optional(),
+  mentionedUserIds: z.array(z.string()).optional(),
 })
 
 export async function GET(request: NextRequest) {
@@ -39,6 +41,8 @@ export async function GET(request: NextRequest) {
     if (workId) {
       where.workId = workId
     }
+    // Only get top-level comments (no parent)
+    where.parentId = null
 
     const comments = await prisma.comment.findMany({
       where,
@@ -60,6 +64,20 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             title: true,
+          },
+        },
+        replies: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                username: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'asc',
           },
         },
       },
@@ -93,6 +111,9 @@ export async function POST(request: NextRequest) {
     const workId = formData.get('workId') as string | null
     const message = formData.get('message') as string | null
     const file = formData.get('file') as File | null
+    const parentId = formData.get('parentId') as string | null
+    const mentionedUserIdsStr = formData.get('mentionedUserIds') as string | null
+    const mentionedUserIds = mentionedUserIdsStr ? JSON.parse(mentionedUserIdsStr) : []
 
     if (!checkpointId && !workId) {
       return NextResponse.json(
@@ -117,14 +138,43 @@ export async function POST(request: NextRequest) {
       fileUrl = `/uploads/${Date.now()}-${file.name}`
     }
 
+    // If replying, get parent comment's workId/checkpointId
+    let finalWorkId = workId || null
+    let finalCheckpointId = checkpointId || null
+    
+    if (parentId) {
+      const parentComment = await prisma.comment.findUnique({
+        where: { id: parentId },
+        select: {
+          workId: true,
+          checkpointId: true,
+        },
+      })
+      if (parentComment) {
+        finalWorkId = parentComment.workId || finalWorkId
+        finalCheckpointId = parentComment.checkpointId || finalCheckpointId
+      }
+    }
+
+    const commentData: any = {
+      userId: session.id,
+      message: message?.trim() || undefined,
+      fileUrl,
+      mentionedUserIds: mentionedUserIds.length > 0 ? mentionedUserIds : [],
+    }
+
+    if (finalCheckpointId) {
+      commentData.checkpointId = finalCheckpointId
+    }
+    if (finalWorkId) {
+      commentData.workId = finalWorkId
+    }
+    if (parentId) {
+      commentData.parentId = parentId
+    }
+
     const comment = await prisma.comment.create({
-      data: {
-        checkpointId: checkpointId || undefined,
-        workId: workId || undefined,
-        userId: session.id,
-        message: message?.trim() || undefined,
-        fileUrl,
-      },
+      data: commentData,
       include: {
         user: {
           select: {
@@ -151,13 +201,43 @@ export async function POST(request: NextRequest) {
             title: true,
           },
         },
+        parent: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                username: true,
+              },
+            },
+          },
+        },
       },
     })
 
-    // Create activity log
-    const logDetails = checkpointId 
-      ? `คอมเมนต์ใน: ${comment.work?.title || ''} - ${comment.checkpoint?.name || ''}`
-      : `คอมเมนต์ในงาน: ${comment.work?.title || ''}`
+    // Create activity log - fetch work and checkpoint separately if needed
+    let workTitle = ''
+    let checkpointName = ''
+    
+    if (finalWorkId) {
+      const work = await prisma.workOrder.findUnique({
+        where: { id: finalWorkId },
+        select: { title: true },
+      })
+      workTitle = work?.title || ''
+    }
+    
+    if (finalCheckpointId) {
+      const checkpoint = await prisma.checkpoint.findUnique({
+        where: { id: finalCheckpointId },
+        select: { name: true },
+      })
+      checkpointName = checkpoint?.name || ''
+    }
+    
+    const logDetails = finalCheckpointId 
+      ? `คอมเมนต์ใน: ${workTitle} - ${checkpointName}`
+      : `คอมเมนต์ในงาน: ${workTitle}`
     
     await prisma.activityLog.create({
       data: {
