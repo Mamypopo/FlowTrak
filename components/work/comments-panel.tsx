@@ -400,34 +400,35 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
 
     return (
       <div key={comment.id} className={cn(
-        "flex gap-3 group hover:bg-muted/30 rounded-xl p-3 -mx-3 transition-colors",
-        isReply && "ml-8 border-l-2 border-primary/20 pl-4"
+        "flex gap-2 sm:gap-3 group hover:bg-muted/30 rounded-xl p-2 sm:p-3 -mx-2 sm:-mx-3 transition-colors",
+        isReply && "ml-4 sm:ml-8 border-l-2 border-primary/20 pl-2 sm:pl-4"
       )}>
-        <Avatar className="h-10 w-10 shrink-0 ring-2 ring-background shadow-sm">
+        <Avatar className="h-8 w-8 sm:h-10 sm:w-10 shrink-0 ring-2 ring-background shadow-sm">
           <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold">
-            <User className="h-5 w-5" />
+            <User className="h-4 w-4 sm:h-5 sm:w-5" />
           </AvatarFallback>
         </Avatar>
-        <div className="flex-1 space-y-2.5 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-sm text-foreground">{comment.user.name}</span>
+        <div className="flex-1 space-y-1.5 sm:space-y-2.5 min-w-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            <span className="font-semibold text-xs sm:text-sm text-foreground">{comment.user.name}</span>
             {comment.checkpoint && (
-              <Badge variant="outline" className="text-xs border-primary/20 bg-primary/5 text-primary">
+              <Badge variant="outline" className="text-[10px] sm:text-xs border-primary/20 bg-primary/5 text-primary px-1 sm:px-1.5">
                 {comment.checkpoint.name}
               </Badge>
             )}
             {comment.parent && (
-              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                <Reply className="h-3 w-3" />
-                ตอบกลับ {comment.parent.user.name}
+              <span className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-0.5 sm:gap-1">
+                <Reply className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                <span className="hidden sm:inline">ตอบกลับ {comment.parent.user.name}</span>
+                <span className="sm:hidden">ตอบ</span>
               </span>
             )}
-            <span className="text-xs text-muted-foreground">
+            <span className="text-[10px] sm:text-xs text-muted-foreground">
               {format(new Date(comment.createdAt), 'dd MMM yyyy HH:mm', { locale: th })}
             </span>
           </div>
           {comment.message && (
-            <div className="bg-gradient-to-br from-muted/60 to-muted/40 rounded-2xl rounded-tl-sm px-4 py-3 text-sm leading-relaxed break-words border border-border/50 shadow-sm">
+            <div className="bg-gradient-to-br from-muted/60 to-muted/40 rounded-2xl rounded-tl-sm px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm leading-relaxed break-words border border-border/50 shadow-sm">
               {renderMessage(comment.message)}
             </div>
           )}
@@ -436,9 +437,9 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
               href={comment.fileUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 p-3 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 hover:from-primary/15 hover:to-primary/10 border border-primary/20 hover:border-primary/30 transition-all shadow-sm hover:shadow-md"
+              className="inline-flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-primary hover:text-primary/80 p-2 sm:p-3 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 hover:from-primary/15 hover:to-primary/10 border border-primary/20 hover:border-primary/30 transition-all shadow-sm hover:shadow-md"
             >
-              <Paperclip className="h-4 w-4" />
+              <Paperclip className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="font-medium">ไฟล์แนบ</span>
             </a>
           )}
@@ -447,14 +448,14 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
               variant="ghost"
               size="sm"
               onClick={() => handleReplyClick(comment)}
-              className="h-7 px-2 text-xs text-muted-foreground hover:text-primary"
+              className="h-6 sm:h-7 px-1.5 sm:px-2 text-[10px] sm:text-xs text-muted-foreground hover:text-primary"
             >
-              <Reply className="h-3 w-3 mr-1.5" />
+              <Reply className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1 sm:mr-1.5" />
               ตอบกลับ
             </Button>
           )}
           {comment.replies && comment.replies.length > 0 && (
-            <div className="space-y-2 mt-2">
+            <div className="space-y-1.5 sm:space-y-2 mt-1.5 sm:mt-2">
               {comment.replies.map((reply) => renderComment(reply, true))}
             </div>
           )}
@@ -492,25 +493,27 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
     <div className="h-full md:h-full flex flex-col md:overflow-hidden bg-background">
       {/* Header */}
       <div className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10 shrink-0">
-        <div className="container mx-auto max-w-3xl px-6 py-4">
+        <div className="container mx-auto max-w-3xl px-3 sm:px-4 md:px-6 py-3 sm:py-4">
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'work' | 'checkpoint')}>
-            <TabsList className="w-full justify-start bg-transparent h-auto p-0 gap-2">
+            <TabsList className="w-full justify-start bg-transparent h-auto p-0 gap-1.5 sm:gap-2">
               <TabsTrigger 
                 value="work" 
-                className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-full px-4 py-2"
+                className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-full px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm"
               >
-                <MessageSquare className="h-4 w-4 mr-2" />
-                คอมเมนต์งาน
+                <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">คอมเมนต์งาน</span>
+                <span className="sm:hidden">งาน</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="checkpoint" 
                 disabled={!checkpoint}
-                className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-full px-4 py-2 disabled:opacity-50"
+                className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-full px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 disabled:opacity-50 text-xs sm:text-sm"
               >
-                <CheckCircle2 className="h-4 w-4 mr-2" />
-                คอมเมนต์ Checkpoint
+                <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">คอมเมนต์ Checkpoint</span>
+                <span className="sm:hidden">Checkpoint</span>
                 {checkpoint && (
-                  <Badge variant="outline" className="ml-2 text-xs">
+                  <Badge variant="outline" className="ml-1 sm:ml-2 text-[10px] sm:text-xs hidden sm:inline-flex">
                     {checkpoint.name}
                   </Badge>
                 )}
@@ -522,7 +525,7 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
 
       {/* Comments List */}
       <div className="flex-1 min-h-0 overflow-y-auto">
-        <div className="container mx-auto max-w-3xl px-6 py-6">
+        <div className="container mx-auto max-w-3xl px-3 sm:px-4 md:px-6 py-4 sm:py-6">
           {isLoading ? (
             <div className="space-y-6">
               {[...Array(4)].map((_, i) => (
@@ -660,16 +663,16 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
               </div>
 
               {/* Emoji Picker & Send Button */}
-              <div className="flex items-center gap-1.5 shrink-0">
+              <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-8 w-8 p-0 rounded-lg hover:bg-primary/10 transition-colors"
+                      className="h-7 w-7 sm:h-8 sm:w-8 p-0 rounded-lg hover:bg-primary/10 transition-colors"
                     >
-                      <Smile className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+                      <Smile className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground hover:text-primary transition-colors" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent 
@@ -696,9 +699,10 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
                   <Button
                     type="submit"
                     size="sm"
-                    className="h-8 px-3 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm hover:shadow-md transition-all"
+                    className="h-7 w-7 sm:h-8 sm:w-8 sm:px-3 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm hover:shadow-md transition-all p-0 sm:p-auto"
                   >
-                    <Send className="h-4 w-4" />
+                    <Send className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline ml-1.5">ส่ง</span>
                   </Button>
                 )}
               </div>
