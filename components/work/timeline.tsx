@@ -205,37 +205,16 @@ export function Timeline({ checkpoints, onCheckpointClick, selectedCheckpointId,
             const canProblem = canPerformAction(checkpoint, 'problem')
 
             return (
-              <div key={checkpoint.id} className="flex items-start gap-0 flex-shrink-0 p-6">
-                {/* Connection Line */}
-                {!isLast && (
-                  <div className="absolute top-16 left-full w-6 h-0.5 flex items-center z-0">
-                    <div className={cn(
-                      "h-1 w-full rounded-full transition-all duration-500",
-                      allPreviousCompleted && isCompleted
-                        ? `bg-gradient-to-r ${config.lineColor}`
-                        : allPreviousCompleted
-                        ? `bg-gradient-to-r ${config.lineColor} opacity-50`
-                        : "bg-muted"
-                    )} />
-                    {/* Animated dot on line */}
-                    {isProcessing && (
-                      <div className={cn(
-                        "absolute left-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full",
-                        config.lineColor,
-                        "animate-pulse"
-                      )} />
-                    )}
-                  </div>
-                )}
-
+              <div key={checkpoint.id} className="relative flex items-start gap-0 flex-shrink-0 overflow-visible">
                 {/* Checkpoint Item */}
-                <div
+                <div 
                   className={cn(
                     "relative flex flex-col items-center w-64 p-5",
                     onCheckpointClick && "cursor-pointer"
                   )}
                   onClick={() => onCheckpointClick?.(checkpoint)}
                 >
+
                   {/* Icon Circle with enhanced styling */}
                   <div className={cn(
                     "relative z-10 flex h-14 w-14 items-center justify-center rounded-full border-2 mb-3",
@@ -435,8 +414,29 @@ export function Timeline({ checkpoints, onCheckpointClick, selectedCheckpointId,
                       </div>
                     )}
                   </div>
-
                 </div>
+
+                {/* Connection Line - positioned between checkpoints */}
+                {!isLast && (
+                  <div className="absolute top-[56px] left-full w-6 h-0.5 flex items-center z-0 pointer-events-none">
+                    <div className={cn(
+                      "h-0.5 w-full rounded-full transition-all duration-500",
+                      allPreviousCompleted && isCompleted
+                        ? config.lineColor
+                        : allPreviousCompleted
+                        ? `${config.lineColor} opacity-50`
+                        : "bg-muted dark:bg-muted-foreground/30"
+                    )} />
+                    {/* Animated dot on line */}
+                    {isProcessing && (
+                      <div className={cn(
+                        "absolute left-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full",
+                        config.lineColor,
+                        "animate-pulse"
+                      )} />
+                    )}
+                  </div>
+                )}
               </div>
             )
           })}
