@@ -5,8 +5,11 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Moon, Sun, LogOut, Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import { useTheme } from 'next-themes'
 import { useUser } from '@/contexts/user-context'
+import Swal from 'sweetalert2'
+import { getSwalConfig } from '@/lib/swal-config'
 
 export function Nav() {
   const pathname = usePathname()
@@ -22,8 +25,21 @@ export function Nav() {
   }, [])
 
   const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' })
-    router.push('/login')
+    const result = await Swal.fire(getSwalConfig({
+      title: 'ยืนยันการออกจากระบบ',
+      text: 'คุณต้องการออกจากระบบหรือไม่?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'ออกจากระบบ',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: 'hsl(var(--destructive))',
+    }))
+
+    if (result.isConfirmed) {
+      await fetch('/api/auth/logout', { method: 'POST' })
+      router.push('/login')
+      router.refresh()
+    }
   }
 
   return (
@@ -75,18 +91,16 @@ export function Nav() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            suppressHydrationWarning
-          >
-            {mounted ? (
-              theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />
-            ) : (
-              <Moon className="h-5 w-5" />
-            )}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Moon className="h-4 w-4 text-muted-foreground" />
+            <Switch
+              checked={mounted && theme === 'dark'}
+              onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+              disabled={!mounted}
+              suppressHydrationWarning
+            />
+            <Sun className="h-4 w-4 text-muted-foreground" />
+          </div>
           
           {user && (
             <div className="hidden md:flex items-center gap-2">

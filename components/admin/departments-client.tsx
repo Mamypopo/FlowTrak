@@ -76,7 +76,7 @@ export function DepartmentsClient() {
           title: editingDepartment ? 'อัปเดตแผนกสำเร็จ' : 'สร้างแผนกสำเร็จ',
           timer: 1500,
           showConfirmButton: false,
-        })
+        }))
         setIsDialogOpen(false)
         setEditingDepartment(null)
         reset()
@@ -87,7 +87,7 @@ export function DepartmentsClient() {
           icon: 'error',
           title: 'เกิดข้อผิดพลาด',
           text: error.error || 'กรุณาลองใหม่อีกครั้ง',
-        })
+        }))
       }
     } catch (error) {
       await Swal.fire(getSwalConfig({
@@ -121,14 +121,14 @@ export function DepartmentsClient() {
           title: 'ลบแผนกสำเร็จ',
           timer: 1500,
           showConfirmButton: false,
-        })
+        }))
         fetchDepartments()
       } else {
         await Swal.fire(getSwalConfig({
           icon: 'error',
           title: 'เกิดข้อผิดพลาด',
           text: 'กรุณาลองใหม่อีกครั้ง',
-        })
+        }))
       }
     } catch (error) {
       await Swal.fire(getSwalConfig({
@@ -157,7 +157,7 @@ export function DepartmentsClient() {
                   {editingDepartment ? 'แก้ไขแผนก' : 'สร้างแผนก'}
                 </DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-4">
                 <div>
                   <Label htmlFor="name">ชื่อแผนก</Label>
                   <Input
@@ -166,7 +166,7 @@ export function DepartmentsClient() {
                     placeholder="กรอกชื่อแผนก"
                   />
                   {errors.name && (
-                    <p className="text-sm text-destructive mt-1">{errors.name.message}</p>
+                    <p className="text-sm text-destructive mt-1">{String(errors.name?.message || '')}</p>
                   )}
                 </div>
                 <Button type="submit" className="w-full">
