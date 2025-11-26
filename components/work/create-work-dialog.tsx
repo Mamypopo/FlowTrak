@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Plus } from 'lucide-react'
 import Swal from 'sweetalert2'
+import { getSwalConfig } from '@/lib/swal-config'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -65,30 +66,30 @@ export function CreateWorkDialog() {
 
       if (res.ok) {
         const result = await res.json()
-        await Swal.fire({
+        await Swal.fire(getSwalConfig({
           icon: 'success',
           title: 'สร้างงานสำเร็จ',
           timer: 1500,
           showConfirmButton: false,
-        })
+        }))
         setIsOpen(false)
         reset()
         router.push(`/work/${result.workOrder.id}`)
         router.refresh()
       } else {
         const error = await res.json()
-        await Swal.fire({
+        await Swal.fire(getSwalConfig({
           icon: 'error',
           title: 'เกิดข้อผิดพลาด',
           text: error.error || 'กรุณาลองใหม่อีกครั้ง',
-        })
+        }))
       }
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(getSwalConfig({
         icon: 'error',
         title: 'เกิดข้อผิดพลาด',
         text: 'กรุณาลองใหม่อีกครั้ง',
-      })
+      }))
     }
   }
 

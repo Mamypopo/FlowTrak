@@ -96,4 +96,17 @@
   .dark ::-webkit-scrollbar-thumb:hover {
     @apply bg-muted-foreground/60;
   }
+
+  /* Emoji Picker Theme */
+  .emoji-picker-react {
+    --epr-bg-color: hsl(var(--popover));
+    --epr-text-color: hsl(var(--popover-foreground));
+    --epr-border-color: hsl(var(--border));
+    --epr-category-label-bg-color: hsl(var(--popover));
+    --epr-search-input-bg-color: hsl(var(--muted));
+    --epr-search-input-text-color: hsl(var(--foreground));
+    --epr-search-input-border-color: hsl(var(--border));
+    --epr-emoji-hover-bg-color: hsl(var(--accent));
+    --epr-picker-border-radius: 0.75rem;
+  }
 }

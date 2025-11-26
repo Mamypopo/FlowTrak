@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '@/components/ui/badge'
 import { Plus, Trash2, Edit } from 'lucide-react'
 import Swal from 'sweetalert2'
+import { getSwalConfig } from '@/lib/swal-config'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -96,42 +97,42 @@ export function UsersClient() {
       })
 
       if (res.ok) {
-        await Swal.fire({
+        await Swal.fire(getSwalConfig({
           icon: 'success',
           title: editingUser ? 'อัปเดตผู้ใช้สำเร็จ' : 'สร้างผู้ใช้สำเร็จ',
           timer: 1500,
           showConfirmButton: false,
-        })
+        }))
         setIsDialogOpen(false)
         setEditingUser(null)
         reset()
         fetchUsers()
       } else {
         const error = await res.json()
-        await Swal.fire({
+        await Swal.fire(getSwalConfig({
           icon: 'error',
           title: 'เกิดข้อผิดพลาด',
           text: error.error || 'กรุณาลองใหม่อีกครั้ง',
-        })
+        }))
       }
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(getSwalConfig({
         icon: 'error',
         title: 'เกิดข้อผิดพลาด',
         text: 'กรุณาลองใหม่อีกครั้ง',
-      })
+      }))
     }
   }
 
   const handleDelete = async (id: string) => {
-    const result = await Swal.fire({
+    const result = await Swal.fire(getSwalConfig({
       title: 'ยืนยันการลบ',
       text: 'คุณต้องการลบผู้ใช้นี้หรือไม่?',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'ลบ',
       cancelButtonText: 'ยกเลิก',
-    })
+    }))
 
     if (!result.isConfirmed) return
 
@@ -141,26 +142,26 @@ export function UsersClient() {
       })
 
       if (res.ok) {
-        await Swal.fire({
+        await Swal.fire(getSwalConfig({
           icon: 'success',
           title: 'ลบผู้ใช้สำเร็จ',
           timer: 1500,
           showConfirmButton: false,
-        })
+        }))
         fetchUsers()
       } else {
-        await Swal.fire({
+        await Swal.fire(getSwalConfig({
           icon: 'error',
           title: 'เกิดข้อผิดพลาด',
           text: 'กรุณาลองใหม่อีกครั้ง',
-        })
+        }))
       }
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(getSwalConfig({
         icon: 'error',
         title: 'เกิดข้อผิดพลาด',
         text: 'กรุณาลองใหม่อีกครั้ง',
-      })
+      }))
     }
   }
 
@@ -196,7 +197,7 @@ export function UsersClient() {
                     disabled={!!editingUser}
                   />
                   {errors.username && (
-                    <p className="text-sm text-destructive mt-1">{errors.username.message}</p>
+                    <p className="text-sm text-destructive mt-1">{String(errors.username?.message || '')}</p>
                   )}
                 </div>
 
@@ -211,7 +212,7 @@ export function UsersClient() {
                     placeholder="กรอกรหัสผ่าน"
                   />
                   {errors.password && (
-                    <p className="text-sm text-destructive mt-1">{errors.password.message}</p>
+                    <p className="text-sm text-destructive mt-1">{String(errors.password?.message || '')}</p>
                   )}
                 </div>
 
@@ -223,7 +224,7 @@ export function UsersClient() {
                     placeholder="กรอกชื่อ"
                   />
                   {errors.name && (
-                    <p className="text-sm text-destructive mt-1">{errors.name.message}</p>
+                    <p className="text-sm text-destructive mt-1">{String(errors.name?.message || '')}</p>
                   )}
                 </div>
 
@@ -239,7 +240,7 @@ export function UsersClient() {
                     <option value="ADMIN">ผู้ดูแลระบบ</option>
                   </select>
                   {errors.role && (
-                    <p className="text-sm text-destructive mt-1">{errors.role.message}</p>
+                    <p className="text-sm text-destructive mt-1">{String(errors.role?.message || '')}</p>
                   )}
                 </div>
 

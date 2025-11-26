@@ -10,6 +10,7 @@ import { WorkOrder, Checkpoint } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Play, CheckCircle, RotateCcw, AlertCircle } from 'lucide-react'
 import Swal from 'sweetalert2'
+import { getSwalConfig } from '@/lib/swal-config'
 import { useSocket } from '@/lib/socket-client'
 
 interface WorkDetailClientProps {
@@ -94,14 +95,14 @@ export function WorkDetailClient({ workId }: WorkDetailClientProps) {
       problem: 'มีปัญหา',
     }
 
-    const result = await Swal.fire({
+    const result = await Swal.fire(getSwalConfig({
       title: 'ยืนยันการดำเนินการ',
       text: `คุณต้องการ${actionLabels[action]} checkpoint นี้หรือไม่?`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonText: 'ยืนยัน',
       cancelButtonText: 'ยกเลิก',
-    })
+    }))
 
     if (!result.isConfirmed) return
 
@@ -117,12 +118,12 @@ export function WorkDetailClient({ workId }: WorkDetailClientProps) {
       const data = await res.json()
 
       if (res.ok) {
-        await Swal.fire({
+        await Swal.fire(getSwalConfig({
           icon: 'success',
           title: 'สำเร็จ',
           timer: 1500,
           showConfirmButton: false,
-        })
+        }))
 
         fetchWorkOrder()
 
@@ -130,18 +131,18 @@ export function WorkDetailClient({ workId }: WorkDetailClientProps) {
           socket.emit('checkpoint:updated', data.checkpoint)
         }
       } else {
-        await Swal.fire({
+        await Swal.fire(getSwalConfig({
           icon: 'error',
           title: 'เกิดข้อผิดพลาด',
           text: data.error || 'กรุณาลองใหม่อีกครั้ง',
-        })
+        }))
       }
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(getSwalConfig({
         icon: 'error',
         title: 'เกิดข้อผิดพลาด',
         text: 'กรุณาลองใหม่อีกครั้ง',
-      })
+      }))
     }
   }
 

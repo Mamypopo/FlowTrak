@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import EmojiPicker, { EmojiClickData } from 'emoji-picker-react'
 import { format } from 'date-fns'
 import { th } from 'date-fns/locale'
 import { 
@@ -69,6 +71,7 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
   const [fileName, setFileName] = useState('')
   const [isFocused, setIsFocused] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [pendingCommentIds, setPendingCommentIds] = useState<Set<string>>(new Set())
   const socket = useSocket()
   const commentsEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -112,12 +115,34 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
 
   // Memoized event handler to prevent unnecessary re-renders
   const handleCommentNew = useCallback((newComment: Comment) => {
-    if (newComment.workId === workId && !newComment.checkpointId) {
-      setWorkComments((prev) => [...prev, newComment])
-    } else if (newComment.checkpointId === checkpoint?.id) {
-      setCheckpointComments((prev) => [...prev, newComment])
+    // ข้าม comment ที่เรากำลังส่งอยู่ (จะเพิ่มจาก handleSubmit แล้ว)
+    if (pendingCommentIds.has(newComment.id)) {
+      setPendingCommentIds((prev) => {
+        const next = new Set(prev)
+        next.delete(newComment.id)
+        return next
+      })
+      return
     }
-  }, [workId, checkpoint?.id])
+
+    if (newComment.workId === workId && !newComment.checkpointId) {
+      setWorkComments((prev) => {
+        // ตรวจสอบว่า comment นี้มีอยู่แล้วหรือไม่ (ป้องกันการซ้ำ)
+        if (prev.some(comment => comment.id === newComment.id)) {
+          return prev
+        }
+        return [...prev, newComment]
+      })
+    } else if (newComment.checkpointId === checkpoint?.id) {
+      setCheckpointComments((prev) => {
+        // ตรวจสอบว่า comment นี้มีอยู่แล้วหรือไม่ (ป้องกันการซ้ำ)
+        if (prev.some(comment => comment.id === newComment.id)) {
+          return prev
+        }
+        return [...prev, newComment]
+      })
+    }
+  }, [workId, checkpoint?.id, pendingCommentIds])
 
   useEffect(() => {
     if (socket && workId) {
@@ -172,18 +197,36 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
 
       if (res.ok) {
         const data = await res.json()
+        const newComment = data.comment
+        
+        // เพิ่ม comment ID เข้า pending set เพื่อป้องกันการซ้ำจาก socket event
+        setPendingCommentIds((prev) => new Set(prev).add(newComment.id))
+        
+        // เพิ่ม comment เข้า state
         if (isWorkComment) {
-          setWorkComments((prev) => [...prev, data.comment])
+          setWorkComments((prev) => {
+            // ตรวจสอบว่า comment นี้มีอยู่แล้วหรือไม่ (ป้องกันการซ้ำ)
+            if (prev.some(comment => comment.id === newComment.id)) {
+              return prev
+            }
+            return [...prev, newComment]
+          })
         } else {
-          setCheckpointComments((prev) => [...prev, data.comment])
+          setCheckpointComments((prev) => {
+            // ตรวจสอบว่า comment นี้มีอยู่แล้วหรือไม่ (ป้องกันการซ้ำ)
+            if (prev.some(comment => comment.id === newComment.id)) {
+              return prev
+            }
+            return [...prev, newComment]
+          })
         }
+        
         setMessage('')
         setFile(null)
         setFileName('')
         
-        if (socket) {
-          socket.emit('comment:new', data.comment)
-        }
+        // ไม่ต้อง emit socket event กลับไป เพราะ server จะ broadcast ให้เอง
+        // handleCommentNew จะข้าม comment นี้เพราะอยู่ใน pendingCommentIds
       }
     } catch (error) {
       console.error('Error posting comment:', error)
@@ -204,6 +247,11 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
+  }
+
+  const handleEmojiClick = (emojiData: EmojiClickData) => {
+    setMessage((prev) => prev + emojiData.emoji)
+    textareaRef.current?.focus()
   }
 
   const renderComments = (comments: Comment[]) => {
@@ -392,7 +440,7 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
                 />
               </div>
 
-              {/* Send Button */}
+              {/* Emoji Picker & Send Button */}
               {message.trim() || file ? (
                 <Button
                   type="submit"
@@ -402,14 +450,33 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
                   <Send className="h-4 w-4" />
                 </Button>
               ) : (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 shrink-0 rounded-lg hover:bg-primary/10 transition-colors"
-                >
-                  <Smile className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
-                </Button>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 shrink-0 rounded-lg hover:bg-primary/10 transition-colors"
+                    >
+                      <Smile className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent 
+                    className="w-auto p-0 border-0 shadow-lg"
+                    side="top"
+                    align="end"
+                    sideOffset={8}
+                  >
+                    <EmojiPicker
+                      onEmojiClick={handleEmojiClick}
+                      width={350}
+                      height={400}
+                      previewConfig={{ showPreview: false }}
+                      skinTonesDisabled
+                      searchDisabled={false}
+                    />
+                  </PopoverContent>
+                </Popover>
               )}
             </div>
           </form>

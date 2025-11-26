@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '@/components/ui/badge'
 import { Plus, Trash2, Edit, GripVertical } from 'lucide-react'
 import Swal from 'sweetalert2'
+import { getSwalConfig } from '@/lib/swal-config'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -80,41 +81,41 @@ export function TemplatesClient() {
       })
 
       if (res.ok) {
-        await Swal.fire({
+        await Swal.fire(getSwalConfig({
           icon: 'success',
           title: 'สร้างเทมเพลตสำเร็จ',
           timer: 1500,
           showConfirmButton: false,
-        })
+        }))
         setIsTemplateDialogOpen(false)
         resetTemplate()
         fetchTemplates()
       } else {
         const error = await res.json()
-        await Swal.fire({
+        await Swal.fire(getSwalConfig({
           icon: 'error',
           title: 'เกิดข้อผิดพลาด',
           text: error.error || 'กรุณาลองใหม่อีกครั้ง',
-        })
+        }))
       }
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(getSwalConfig({
         icon: 'error',
         title: 'เกิดข้อผิดพลาด',
         text: 'กรุณาลองใหม่อีกครั้ง',
-      })
+      }))
     }
   }
 
   const handleDeleteTemplate = async (id: string) => {
-    const result = await Swal.fire({
+    const result = await Swal.fire(getSwalConfig({
       title: 'ยืนยันการลบ',
       text: 'คุณต้องการลบเทมเพลตนี้หรือไม่?',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'ลบ',
       cancelButtonText: 'ยกเลิก',
-    })
+    }))
 
     if (!result.isConfirmed) return
 
@@ -124,29 +125,29 @@ export function TemplatesClient() {
       })
 
       if (res.ok) {
-        await Swal.fire({
+        await Swal.fire(getSwalConfig({
           icon: 'success',
           title: 'ลบเทมเพลตสำเร็จ',
           timer: 1500,
           showConfirmButton: false,
-        })
+        }))
         fetchTemplates()
         if (selectedTemplate?.id === id) {
           setSelectedTemplate(null)
         }
       } else {
-        await Swal.fire({
+        await Swal.fire(getSwalConfig({
           icon: 'error',
           title: 'เกิดข้อผิดพลาด',
           text: 'กรุณาลองใหม่อีกครั้ง',
-        })
+        }))
       }
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(getSwalConfig({
         icon: 'error',
         title: 'เกิดข้อผิดพลาด',
         text: 'กรุณาลองใหม่อีกครั้ง',
-      })
+      }))
     }
   }
 
@@ -167,12 +168,12 @@ export function TemplatesClient() {
       })
 
       if (res.ok) {
-        await Swal.fire({
+        await Swal.fire(getSwalConfig({
           icon: 'success',
           title: 'สร้าง checkpoint สำเร็จ',
           timer: 1500,
           showConfirmButton: false,
-        })
+        }))
         setIsCheckpointDialogOpen(false)
         resetCheckpoint()
         fetchTemplates()
@@ -180,30 +181,30 @@ export function TemplatesClient() {
         if (updated) setSelectedTemplate(updated)
       } else {
         const error = await res.json()
-        await Swal.fire({
+        await Swal.fire(getSwalConfig({
           icon: 'error',
           title: 'เกิดข้อผิดพลาด',
           text: error.error || 'กรุณาลองใหม่อีกครั้ง',
-        })
+        }))
       }
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(getSwalConfig({
         icon: 'error',
         title: 'เกิดข้อผิดพลาด',
         text: 'กรุณาลองใหม่อีกครั้ง',
-      })
+      }))
     }
   }
 
   const handleDeleteCheckpoint = async (id: string) => {
-    const result = await Swal.fire({
+    const result = await Swal.fire(getSwalConfig({
       title: 'ยืนยันการลบ',
       text: 'คุณต้องการลบ checkpoint นี้หรือไม่?',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'ลบ',
       cancelButtonText: 'ยกเลิก',
-    })
+    }))
 
     if (!result.isConfirmed) return
 
@@ -213,28 +214,28 @@ export function TemplatesClient() {
       })
 
       if (res.ok) {
-        await Swal.fire({
+        await Swal.fire(getSwalConfig({
           icon: 'success',
           title: 'ลบ checkpoint สำเร็จ',
           timer: 1500,
           showConfirmButton: false,
-        })
+        }))
         fetchTemplates()
         const updated = templates.find((t) => t.id === selectedTemplate?.id)
         if (updated) setSelectedTemplate(updated)
       } else {
-        await Swal.fire({
+        await Swal.fire(getSwalConfig({
           icon: 'error',
           title: 'เกิดข้อผิดพลาด',
           text: 'กรุณาลองใหม่อีกครั้ง',
-        })
+        }))
       }
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(getSwalConfig({
         icon: 'error',
         title: 'เกิดข้อผิดพลาด',
         text: 'กรุณาลองใหม่อีกครั้ง',
-      })
+      }))
     }
   }
 
@@ -253,7 +254,7 @@ export function TemplatesClient() {
               <DialogHeader>
                 <DialogTitle>สร้าง Template</DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleSubmitTemplate(handleCreateTemplate)} className="space-y-4">
+              <form onSubmit={handleSubmitTemplate(handleCreateTemplate as any)} className="space-y-4">
                 <div>
                   <Label htmlFor="name">ชื่อ Template</Label>
                   <Input
@@ -262,7 +263,7 @@ export function TemplatesClient() {
                     placeholder="กรอกชื่อ template"
                   />
                   {templateErrors.name && (
-                    <p className="text-sm text-destructive mt-1">{templateErrors.name.message}</p>
+                    <p className="text-sm text-destructive mt-1">{String(templateErrors.name?.message || '')}</p>
                   )}
                 </div>
                 <Button type="submit" className="w-full">สร้าง</Button>
@@ -332,7 +333,7 @@ export function TemplatesClient() {
                       <DialogTitle>สร้าง Checkpoint</DialogTitle>
                     </DialogHeader>
                     <form
-                      onSubmit={handleSubmitCheckpoint(handleCreateCheckpoint)}
+                      onSubmit={handleSubmitCheckpoint(handleCreateCheckpoint as any)}
                       className="space-y-4"
                     >
                       <div>
@@ -344,7 +345,7 @@ export function TemplatesClient() {
                         />
                         {checkpointErrors.name && (
                           <p className="text-sm text-destructive mt-1">
-                            {checkpointErrors.name.message}
+                            {String(checkpointErrors.name?.message || '')}
                           </p>
                         )}
                       </div>
@@ -364,7 +365,7 @@ export function TemplatesClient() {
                         </select>
                         {checkpointErrors.ownerDeptId && (
                           <p className="text-sm text-destructive mt-1">
-                            {checkpointErrors.ownerDeptId.message}
+                            {String(checkpointErrors.ownerDeptId?.message || '')}
                           </p>
                         )}
                       </div>

@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '@/components/ui/badge'
 import { Plus, Trash2, Edit } from 'lucide-react'
 import Swal from 'sweetalert2'
+import { getSwalConfig } from '@/lib/swal-config'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -70,7 +71,7 @@ export function DepartmentsClient() {
       })
 
       if (res.ok) {
-        await Swal.fire({
+        await Swal.fire(getSwalConfig({
           icon: 'success',
           title: editingDepartment ? 'อัปเดตแผนกสำเร็จ' : 'สร้างแผนกสำเร็จ',
           timer: 1500,
@@ -82,30 +83,30 @@ export function DepartmentsClient() {
         fetchDepartments()
       } else {
         const error = await res.json()
-        await Swal.fire({
+        await Swal.fire(getSwalConfig({
           icon: 'error',
           title: 'เกิดข้อผิดพลาด',
           text: error.error || 'กรุณาลองใหม่อีกครั้ง',
         })
       }
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(getSwalConfig({
         icon: 'error',
         title: 'เกิดข้อผิดพลาด',
         text: 'กรุณาลองใหม่อีกครั้ง',
-      })
+      }))
     }
   }
 
   const handleDelete = async (id: string) => {
-    const result = await Swal.fire({
+    const result = await Swal.fire(getSwalConfig({
       title: 'ยืนยันการลบ',
       text: 'คุณต้องการลบแผนกนี้หรือไม่?',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'ลบ',
       cancelButtonText: 'ยกเลิก',
-    })
+    }))
 
     if (!result.isConfirmed) return
 
@@ -115,7 +116,7 @@ export function DepartmentsClient() {
       })
 
       if (res.ok) {
-        await Swal.fire({
+        await Swal.fire(getSwalConfig({
           icon: 'success',
           title: 'ลบแผนกสำเร็จ',
           timer: 1500,
@@ -123,18 +124,18 @@ export function DepartmentsClient() {
         })
         fetchDepartments()
       } else {
-        await Swal.fire({
+        await Swal.fire(getSwalConfig({
           icon: 'error',
           title: 'เกิดข้อผิดพลาด',
           text: 'กรุณาลองใหม่อีกครั้ง',
         })
       }
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(getSwalConfig({
         icon: 'error',
         title: 'เกิดข้อผิดพลาด',
         text: 'กรุณาลองใหม่อีกครั้ง',
-      })
+      }))
     }
   }
 
