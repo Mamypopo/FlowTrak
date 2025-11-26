@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
 import { UsersClient } from '@/components/admin/users-client'
+import { AppLayout } from '@/components/layout/app-layout'
 
 export default async function UsersPage() {
   const session = await getSession()
@@ -9,6 +10,10 @@ export default async function UsersPage() {
     redirect('/dashboard')
   }
 
-  return <UsersClient />
+  return (
+    <AppLayout>
+      <UsersClient />
+    </AppLayout>
+  )
 }
 

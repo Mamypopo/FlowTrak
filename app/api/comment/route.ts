@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
+import { emitToWork } from '@/lib/socket'
 import { z } from 'zod'
 
 const createCommentSchema = z.object({
@@ -55,6 +56,12 @@ export async function GET(request: NextRequest) {
             name: true,
           },
         },
+        work: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'asc',
@@ -62,10 +69,10 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json({ comments })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get comments error:', error)
     return NextResponse.json(
-      { error: 'เกิดข้อผิดพลาด' },
+      { error: 'เกิดข้อผิดพลาด', details: error?.message || 'Unknown error' },
       { status: 500 }
     )
   }
@@ -159,6 +166,20 @@ export async function POST(request: NextRequest) {
         details: logDetails,
       },
     })
+
+    // Emit real-time event
+    if (workId) {
+      emitToWork(workId, 'comment:new', comment)
+    } else if (checkpointId) {
+      // Get workId from checkpoint
+      const checkpoint = await prisma.checkpoint.findUnique({
+        where: { id: checkpointId },
+        select: { workId: true },
+      })
+      if (checkpoint) {
+        emitToWork(checkpoint.workId, 'comment:new', comment)
+      }
+    }
 
     return NextResponse.json({ comment })
   } catch (error) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
+import { emitToWork } from '@/lib/socket'
 import { z } from 'zod'
 
 const actionSchema = z.object({
@@ -80,6 +81,21 @@ export async function POST(
         action: `CHECKPOINT_${validated.action.toUpperCase()}`,
         details: `${checkpoint.work.title} - ${checkpoint.name}: ${validated.action}`,
       },
+    })
+
+    // Emit real-time event
+    emitToWork(checkpoint.workId, 'checkpoint:updated', updated)
+    emitToWork(checkpoint.workId, 'activity:new', {
+      id: `temp-${Date.now()}`,
+      userId: session.id,
+      user: {
+        id: session.id,
+        name: session.name || 'User',
+        username: session.username || '',
+      },
+      action: `CHECKPOINT_${validated.action.toUpperCase()}`,
+      details: `${checkpoint.work.title} - ${checkpoint.name}: ${validated.action}`,
+      createdAt: new Date().toISOString(),
     })
 
     return NextResponse.json({ checkpoint: updated })

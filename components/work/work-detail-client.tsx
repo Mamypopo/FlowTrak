@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Nav } from '@/components/layout/nav'
 import { Timeline } from '@/components/work/timeline'
 import { CommentsPanel } from '@/components/work/comments-panel'
 import { InfoPanel } from '@/components/work/info-panel'
@@ -22,6 +21,7 @@ export function WorkDetailClient({ workId }: WorkDetailClientProps) {
   const [selectedCheckpoint, setSelectedCheckpoint] = useState<Checkpoint | null>(null)
   const [workOrder, setWorkOrder] = useState<WorkOrder | null>(null)
   const socket = useSocket()
+  const joinedWorkIdRef = useRef<string | null>(null)
 
   const handleSelectWork = (newWorkId: string) => {
     if (newWorkId !== workId) {
@@ -42,30 +42,49 @@ export function WorkDetailClient({ workId }: WorkDetailClientProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workId])
 
+  // Memoized event handler to prevent unnecessary re-renders
+  const handleCheckpointUpdated = useCallback((updatedCheckpoint: Checkpoint) => {
+    setWorkOrder((prev) => {
+      if (!prev) return null
+      return {
+        ...prev,
+        checkpoints: prev.checkpoints?.map((cp) =>
+          cp.id === updatedCheckpoint.id ? updatedCheckpoint : cp
+        ),
+      }
+    })
+  }, [])
+
+  // Socket room management - join/leave when workId changes
   useEffect(() => {
-    if (socket && workId) {
+    if (!socket || !workId) return
+
+    let isMounted = true
+
+    // Leave previous room if workId changed
+    if (joinedWorkIdRef.current && joinedWorkIdRef.current !== workId) {
+      socket.emit('leave:work', joinedWorkIdRef.current)
+      joinedWorkIdRef.current = null
+    }
+
+    // Join new room if not already joined
+    if (joinedWorkIdRef.current !== workId && isMounted) {
       socket.emit('join:work', workId)
+      joinedWorkIdRef.current = workId
+    }
 
-      socket.on('checkpoint:updated', (updatedCheckpoint: Checkpoint) => {
-        if (workOrder) {
-          setWorkOrder((prev) => {
-            if (!prev) return null
-            return {
-              ...prev,
-              checkpoints: prev.checkpoints?.map((cp) =>
-                cp.id === updatedCheckpoint.id ? updatedCheckpoint : cp
-              ),
-            }
-          })
-        }
-      })
+    socket.on('checkpoint:updated', handleCheckpointUpdated)
 
-      return () => {
-        socket.off('checkpoint:updated')
+    return () => {
+      isMounted = false
+      socket.off('checkpoint:updated', handleCheckpointUpdated)
+      // Only leave room on unmount, not on workId change (handled above)
+      if (joinedWorkIdRef.current === workId) {
         socket.emit('leave:work', workId)
+        joinedWorkIdRef.current = null
       }
     }
-  }, [socket, workId, workOrder])
+  }, [socket, workId, handleCheckpointUpdated])
 
   const handleCheckpointAction = async (checkpointId: string, action: string) => {
     const actionLabels: Record<string, string> = {
@@ -139,10 +158,7 @@ export function WorkDetailClient({ workId }: WorkDetailClientProps) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Nav />
-      
-      <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="flex-1 flex flex-col overflow-hidden">
         {/* Timeline Section - Large & Prominent */}
         <div className="bg-gradient-to-b from-card via-card/95 to-background border-b shadow-sm">
           <div className="container mx-auto px-6 py-8">
@@ -256,7 +272,6 @@ export function WorkDetailClient({ workId }: WorkDetailClientProps) {
             )}
           </div>
         </div>
-      </div>
     </div>
   )
 }

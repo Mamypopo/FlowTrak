@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
 import { WorkDetailClient } from '@/components/work/work-detail-client'
+import { AppLayout } from '@/components/layout/app-layout'
 
 export default async function WorkDetailPage({
   params,
@@ -13,6 +14,10 @@ export default async function WorkDetailPage({
     redirect('/login')
   }
 
-  return <WorkDetailClient workId={params.id} />
+  return (
+    <AppLayout>
+      <WorkDetailClient workId={params.id} />
+    </AppLayout>
+  )
 }
 

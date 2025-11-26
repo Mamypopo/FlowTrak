@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { format } from 'date-fns'
 import { th } from 'date-fns/locale'
 import { FileText, Clock, User, Activity, Download, Building2 } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSocket } from '@/lib/socket-client'
 import { cn } from '@/lib/utils'
 
@@ -42,20 +42,23 @@ export function InfoPanel({ workOrder }: InfoPanelProps) {
     }
   }, [workOrder])
 
-  useEffect(() => {
-    if (socket && workOrder) {
-      socket.emit('join:work', workOrder.id)
+  // Memoized event handler to prevent unnecessary re-renders
+  const handleActivityNew = useCallback((log: ActivityLog) => {
+    setActivityLogs((prev) => [log, ...prev])
+  }, [])
 
-      socket.on('activity:new', (log: ActivityLog) => {
-        setActivityLogs((prev) => [log, ...prev])
-      })
+  useEffect(() => {
+    if (socket && workOrder?.id) {
+      // Don't join room here - parent component (WorkDetailClient) already joined
+      // Just listen to events
+      socket.on('activity:new', handleActivityNew)
 
       return () => {
-        socket.off('activity:new')
-        socket.emit('leave:work', workOrder.id)
+        socket.off('activity:new', handleActivityNew)
+        // Don't leave room here - parent component will handle it
       }
     }
-  }, [socket, workOrder])
+  }, [socket, workOrder?.id, handleActivityNew])
 
   const fetchActivityLogs = async () => {
     if (!workOrder) return

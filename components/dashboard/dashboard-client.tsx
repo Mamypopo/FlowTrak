@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Nav } from '@/components/layout/nav'
 import { CreateWorkDialog } from '@/components/work/create-work-dialog'
 import { WorkOrder, Checkpoint } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -147,10 +146,7 @@ export function DashboardClient() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Nav />
-      
-      <div className="flex-1 container mx-auto p-6 space-y-6">
+    <div className="flex-1 container mx-auto p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -408,7 +404,6 @@ export function DashboardClient() {
             })}
           </div>
         )}
-      </div>
     </div>
   )
 }

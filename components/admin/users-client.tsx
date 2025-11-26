@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Nav } from '@/components/layout/nav'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -172,9 +171,7 @@ export function UsersClient() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Nav />
-      
+    <div className="flex-1 container mx-auto p-6">
       <div className="container mx-auto p-6">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold">จัดการผู้ใช้</h1>

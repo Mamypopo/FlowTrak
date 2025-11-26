@@ -6,32 +6,25 @@ import { usePathname, useRouter } from 'next/navigation'
 import { Moon, Sun, LogOut, Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useTheme } from 'next-themes'
+import { useUser } from '@/contexts/user-context'
 
 export function Nav() {
   const pathname = usePathname()
   const router = useRouter()
   const { theme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-  const [user, setUser] = useState<any>(null)
+  const { user } = useUser()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
+  // Prevent hydration mismatch for theme-dependent UI
   useEffect(() => {
     setMounted(true)
-    fetch('/api/auth/me')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.user) {
-          setUser(data.user)
-        }
-      })
   }, [])
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' })
     router.push('/login')
   }
-
-  if (!mounted) return null
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -86,8 +79,13 @@ export function Nav() {
             variant="ghost"
             size="icon"
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            suppressHydrationWarning
           >
-            {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            {mounted ? (
+              theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />
+            ) : (
+              <Moon className="h-5 w-5" />
+            )}
           </Button>
           
           {user && (

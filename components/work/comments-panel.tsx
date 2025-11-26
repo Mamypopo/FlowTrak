@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Comment, Checkpoint, WorkOrder } from '@/types'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
@@ -99,24 +99,27 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, checkpoint, workId])
 
+  // Memoized event handler to prevent unnecessary re-renders
+  const handleCommentNew = useCallback((newComment: Comment) => {
+    if (newComment.workId === workId && !newComment.checkpointId) {
+      setWorkComments((prev) => [...prev, newComment])
+    } else if (newComment.checkpointId === checkpoint?.id) {
+      setCheckpointComments((prev) => [...prev, newComment])
+    }
+  }, [workId, checkpoint?.id])
+
   useEffect(() => {
     if (socket && workId) {
-      socket.emit('join:work', workId)
-
-      socket.on('comment:new', (newComment: Comment) => {
-        if (newComment.workId === workId && !newComment.checkpointId) {
-          setWorkComments((prev) => [...prev, newComment])
-        } else if (newComment.checkpointId === checkpoint?.id) {
-          setCheckpointComments((prev) => [...prev, newComment])
-        }
-      })
+      // Don't join room here - parent component (WorkDetailClient) already joined
+      // Just listen to events
+      socket.on('comment:new', handleCommentNew)
 
       return () => {
-        socket.off('comment:new')
-        socket.emit('leave:work', workId)
+        socket.off('comment:new', handleCommentNew)
+        // Don't leave room here - parent component will handle it
       }
     }
-  }, [socket, checkpoint, workId])
+  }, [socket, workId, handleCommentNew])
 
   useEffect(() => {
     commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
