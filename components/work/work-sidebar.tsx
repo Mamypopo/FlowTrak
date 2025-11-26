@@ -150,9 +150,9 @@ export function WorkSidebar({ selectedWorkId, onSelectWork }: WorkSidebarProps) 
   }
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-b from-background to-muted/10 py-3 px-3 md:px-4 overflow-hidden">
+    <div className="h-full flex flex-col bg-gradient-to-b from-background to-muted/10 py-2 px-2 md:px-3 overflow-hidden">
       {/* Enhanced Header */}
-      <div className="mb-3 space-y-2.5">
+      <div className="mb-2 space-y-2">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
             <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
@@ -190,11 +190,11 @@ export function WorkSidebar({ selectedWorkId, onSelectWork }: WorkSidebarProps) 
       </div>
 
       {/* Enhanced Filters - Collapsible */}
-      <div className="space-y-2 mb-3">
+      <div className="space-y-1.5 mb-2">
         <button
           onClick={() => setIsFiltersOpen(!isFiltersOpen)}
           className={cn(
-            "w-full flex items-center justify-between gap-2 p-2 rounded-lg transition-all duration-200",
+            "w-full flex items-center justify-between gap-2 p-1.5 rounded-lg transition-all duration-200",
             "hover:bg-muted/50 border border-transparent hover:border-border/50",
             isFiltersOpen && "bg-muted/30 border-border/50"
           )}
@@ -271,7 +271,7 @@ export function WorkSidebar({ selectedWorkId, onSelectWork }: WorkSidebarProps) 
       {/* Work List - Enhanced */}
       <div className="flex-1 overflow-y-auto -mr-1 pr-1 scrollbar-thin min-h-0">
         {isLoading ? (
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {[...Array(5)].map((_, i) => (
               <Card key={i} className="border rounded-xl overflow-hidden">
                 <CardContent className="p-3">
@@ -323,16 +323,16 @@ export function WorkSidebar({ selectedWorkId, onSelectWork }: WorkSidebarProps) 
                 <Card
                   key={work.id}
                   className={cn(
-                    "cursor-pointer transition-all duration-300 border rounded-xl overflow-hidden group",
+                    "cursor-pointer transition-all duration-200 border rounded-lg overflow-hidden group",
                     "hover:shadow-md",
                     isSelected 
-                      ? "border-primary/50 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent shadow-lg ring-2 ring-primary/20" 
-                      : "border-border/50 bg-card/50 hover:border-primary/30 hover:bg-card shadow-sm"
+                      ? "border-primary/60 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent shadow-md ring-1 ring-primary/30" 
+                      : "border-border/50 bg-card/60 hover:border-primary/30 hover:bg-card shadow-sm"
                   )}
                   onClick={() => onSelectWork(work.id)}
                 >
-                  <CardContent className="p-3">
-                    <div className="space-y-2.5">
+                  <CardContent className="p-2.5">
+                    <div className="space-y-2">
                       {/* Header - Enhanced */}
                       <div className="flex items-start justify-between gap-2">
                         <h4 className={cn(
@@ -350,21 +350,21 @@ export function WorkSidebar({ selectedWorkId, onSelectWork }: WorkSidebarProps) 
                       </div>
 
                       {/* Company - Enhanced */}
-                      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                      <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                         <Building2 className="h-3 w-3 shrink-0 text-primary/60" />
                         <span className="line-clamp-1 truncate">{work.company}</span>
                       </div>
 
-                      {/* Status & Progress - Enhanced */}
-                      <div className="space-y-2">
+                      {/* Status & Progress - Compact */}
+                      <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1">
                             <div className={cn(
-                              "h-4 w-4 rounded-full flex items-center justify-center shrink-0 transition-all",
+                              "h-3.5 w-3.5 rounded-full flex items-center justify-center shrink-0 transition-all",
                               statusInfo.bgColor,
                               isSelected && "ring-2 ring-primary/30"
                             )}>
-                              <StatusIcon className={cn("h-2.5 w-2.5", statusInfo.color)} />
+                              <StatusIcon className={cn("h-2 w-2", statusInfo.color)} />
                             </div>
                             <span className="text-[10px] font-medium text-muted-foreground">
                               {statusInfo.label}
@@ -381,12 +381,12 @@ export function WorkSidebar({ selectedWorkId, onSelectWork }: WorkSidebarProps) 
                           </span>
                         </div>
                         
-                        {/* Progress Bar - Enhanced */}
+                        {/* Progress Bar - Compact */}
                         {work.checkpoints && work.checkpoints.length > 0 && (
-                          <div className="h-1.5 bg-muted/50 rounded-full overflow-hidden shadow-inner">
+                          <div className="h-1 bg-muted/50 rounded-full overflow-hidden">
                             <div 
                               className={cn(
-                                "h-full transition-all duration-500 rounded-full shadow-sm",
+                                "h-full transition-all duration-500 rounded-full",
                                 status === 'COMPLETED' ? "bg-gradient-to-r from-green-500 to-green-400" : 
                                 status === 'PROCESSING' ? "bg-gradient-to-r from-blue-500 to-blue-400" :
                                 status === 'PROBLEM' ? "bg-gradient-to-r from-red-500 to-red-400" : 
@@ -398,8 +398,8 @@ export function WorkSidebar({ selectedWorkId, onSelectWork }: WorkSidebarProps) 
                         )}
                       </div>
 
-                      {/* Footer - Enhanced */}
-                      <div className="space-y-1.5 pt-2 border-t border-border/50">
+                      {/* Footer - Compact */}
+                      <div className="space-y-1 pt-1.5 border-t border-border/50">
                         <div className="flex items-center justify-between text-[10px] text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <CheckCircle2 className="h-3 w-3" />
