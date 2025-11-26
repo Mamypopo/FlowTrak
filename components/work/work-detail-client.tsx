@@ -205,7 +205,10 @@ export function WorkDetailClient({ workId }: WorkDetailClientProps) {
 
           {/* Right - Info (Hidden on mobile/tablet, visible on xl+) */}
           <div className="hidden xl:block flex-shrink-0 w-[28%] max-w-[420px] min-w-[320px] border-l border-border/50 bg-gradient-to-b from-muted/30 to-muted/10 backdrop-blur-sm overflow-hidden">
-            <InfoPanel workOrder={workOrder} />
+            <InfoPanel 
+              workOrder={workOrder} 
+              onWorkOrderUpdate={fetchWorkOrder}
+            />
           </div>
         </div>
 

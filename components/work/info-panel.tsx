@@ -12,9 +12,11 @@ import { FileText, Clock, User, Activity, Download, Building2 } from 'lucide-rea
 import { useState, useEffect, useCallback } from 'react'
 import { useSocket } from '@/lib/socket-client'
 import { cn } from '@/lib/utils'
+import { EditWorkDialog } from '@/components/work/edit-work-dialog'
 
 interface InfoPanelProps {
   workOrder: WorkOrder | null
+  onWorkOrderUpdate?: () => void
 }
 
 const priorityColors = {
@@ -31,7 +33,7 @@ const priorityLabels = {
   URGENT: 'ด่วน',
 }
 
-export function InfoPanel({ workOrder }: InfoPanelProps) {
+export function InfoPanel({ workOrder, onWorkOrderUpdate }: InfoPanelProps) {
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const socket = useSocket()
@@ -103,6 +105,14 @@ export function InfoPanel({ workOrder }: InfoPanelProps) {
             <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
             ข้อมูลงาน
           </h3>
+          {workOrder && (
+            <EditWorkDialog 
+              workOrder={workOrder} 
+              onUpdate={() => {
+                onWorkOrderUpdate?.()
+              }}
+            />
+          )}
         </div>
         <h2 className="text-base font-bold line-clamp-2 leading-tight">{workOrder.title}</h2>
       </div>

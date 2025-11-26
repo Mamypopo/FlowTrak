@@ -8,28 +8,29 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DatePickerComponent } from '@/components/ui/date-picker'
-import { Plus } from 'lucide-react'
+import { Edit } from 'lucide-react'
 import Swal from 'sweetalert2'
 import { getSwalConfig } from '@/lib/swal-config'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Template } from '@/types'
-import { useRouter } from 'next/navigation'
+import { WorkOrder } from '@/types'
 
-const workOrderSchema = z.object({
+const updateWorkOrderSchema = z.object({
   company: z.string().min(1, 'กรุณากรอกชื่อบริษัท'),
   title: z.string().min(1, 'กรุณากรอกชื่องาน'),
   description: z.string().optional(),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']),
   deadline: z.string().optional(),
-  templateId: z.string().min(1, 'กรุณาเลือก template'),
 })
 
-export function CreateWorkDialog() {
-  const [templates, setTemplates] = useState<Template[]>([])
+interface EditWorkDialogProps {
+  workOrder: WorkOrder
+  onUpdate: () => void
+}
+
+export function EditWorkDialog({ workOrder, onUpdate }: EditWorkDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const router = useRouter()
 
   const {
     register,
@@ -38,50 +39,46 @@ export function CreateWorkDialog() {
     setValue,
     watch,
     formState: { errors },
-  } = useForm<z.infer<typeof workOrderSchema>>({
-    resolver: zodResolver(workOrderSchema),
+  } = useForm<z.infer<typeof updateWorkOrderSchema>>({
+    resolver: zodResolver(updateWorkOrderSchema),
     defaultValues: {
-      priority: 'MEDIUM',
-      company: '',
-      title: '',
-      description: '',
-      deadline: '',
-      templateId: '',
+      company: workOrder.company,
+      title: workOrder.title,
+      description: workOrder.description || '',
+      priority: workOrder.priority,
+      deadline: workOrder.deadline || '',
     },
   })
 
   useEffect(() => {
-    fetchTemplates()
-  }, [])
-
-  const fetchTemplates = async () => {
-    const res = await fetch('/api/template')
-    const data = await res.json()
-    if (data.templates) {
-      setTemplates(data.templates)
+    if (isOpen && workOrder) {
+      reset({
+        company: workOrder.company,
+        title: workOrder.title,
+        description: workOrder.description || '',
+        priority: workOrder.priority,
+        deadline: workOrder.deadline || '',
+      })
     }
-  }
+  }, [isOpen, workOrder, reset])
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: z.infer<typeof updateWorkOrderSchema>) => {
     try {
-      const res = await fetch('/api/work/create', {
-        method: 'POST',
+      const res = await fetch(`/api/work/${workOrder.id}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       })
 
       if (res.ok) {
-        const result = await res.json()
         await Swal.fire(getSwalConfig({
           icon: 'success',
-          title: 'สร้างงานสำเร็จ',
+          title: 'แก้ไขงานสำเร็จ',
           timer: 1500,
           showConfirmButton: false,
         }))
         setIsOpen(false)
-        reset()
-        router.push(`/work/${result.workOrder.id}`)
-        router.refresh()
+        onUpdate()
       } else {
         const error = await res.json()
         await Swal.fire(getSwalConfig({
@@ -102,38 +99,19 @@ export function CreateWorkDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          สร้างงานใหม่
+        <Button variant="outline" size="sm">
+          <Edit className="h-4 w-4 mr-2" />
+          แก้ไขงาน
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>สร้างงานใหม่</DialogTitle>
+          <DialogTitle>แก้ไขงาน</DialogTitle>
           <DialogDescription>
-            กรอกข้อมูลเพื่อสร้างงานใหม่ในระบบ
+            แก้ไขข้อมูลงาน (ไม่สามารถแก้ไข template และ checkpoints ได้)
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <Label htmlFor="templateId">Template *</Label>
-            <Select onValueChange={(value) => setValue('templateId', value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="เลือก template" />
-              </SelectTrigger>
-              <SelectContent>
-                {templates.map((template) => (
-                  <SelectItem key={template.id} value={template.id}>
-                    {template.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.templateId && (
-              <p className="text-sm text-destructive mt-1">{errors.templateId.message}</p>
-            )}
-          </div>
-
           <div>
             <Label htmlFor="company">บริษัท *</Label>
             <Input
@@ -142,7 +120,7 @@ export function CreateWorkDialog() {
               placeholder="กรอกชื่อบริษัท"
             />
             {errors.company && (
-              <p className="text-sm text-destructive mt-1">{errors.company.message}</p>
+              <p className="text-sm text-destructive mt-1">{String(errors.company?.message || '')}</p>
             )}
           </div>
 
@@ -154,7 +132,7 @@ export function CreateWorkDialog() {
               placeholder="กรอกชื่องาน"
             />
             {errors.title && (
-              <p className="text-sm text-destructive mt-1">{errors.title.message}</p>
+              <p className="text-sm text-destructive mt-1">{String(errors.title?.message || '')}</p>
             )}
           </div>
 
@@ -196,7 +174,13 @@ export function CreateWorkDialog() {
             />
           </div>
 
-          <Button type="submit" className="w-full">สร้างงาน</Button>
+          <div className="pt-2">
+            <p className="text-xs text-muted-foreground">
+              * ไม่สามารถแก้ไข template และ checkpoints ได้
+            </p>
+          </div>
+
+          <Button type="submit" className="w-full">บันทึกการแก้ไข</Button>
         </form>
       </DialogContent>
     </Dialog>
