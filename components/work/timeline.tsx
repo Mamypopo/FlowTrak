@@ -4,10 +4,11 @@ import { Checkpoint } from '@/types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { CheckCircle2, Clock, AlertCircle, RotateCcw, TrendingUp, Sparkles, Play } from 'lucide-react'
+import { CheckCircle2, Clock, AlertCircle, RotateCcw, TrendingUp, Sparkles, Play, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { th } from 'date-fns/locale'
+import { useUser } from '@/contexts/user-context'
 
 interface TimelineProps {
   checkpoints: Checkpoint[]
@@ -76,6 +77,59 @@ const statusConfig = {
 }
 
 export function Timeline({ checkpoints, onCheckpointClick, selectedCheckpointId, onCheckpointAction, isLoading }: TimelineProps) {
+  const { user: currentUser } = useUser()
+
+  // Helper function to check if user can perform action
+  const canPerformAction = (checkpoint: Checkpoint, action: string): { can: boolean; reason?: string } => {
+    if (!currentUser) {
+      return { can: false, reason: 'กรุณาเข้าสู่ระบบ' }
+    }
+
+    const isAdmin = currentUser.role === 'ADMIN'
+    const isOwnerDept = currentUser.departmentId === checkpoint.ownerDeptId
+
+    // Check department permission (except for ADMIN)
+    if (!isAdmin && !isOwnerDept) {
+      return { can: false, reason: 'คุณไม่มีสิทธิ์ดำเนินการ checkpoint นี้ (ต้องเป็นสมาชิกของแผนกที่รับผิดชอบ)' }
+    }
+
+    // Check status validation
+    if (action === 'start' && checkpoint.status !== 'PENDING') {
+      return { can: false, reason: `ไม่สามารถเริ่ม checkpoint ที่มีสถานะ "${checkpoint.status}" ได้` }
+    }
+
+    if (action === 'complete' && checkpoint.status !== 'PROCESSING') {
+      return { can: false, reason: `ไม่สามารถเสร็จสิ้น checkpoint ที่มีสถานะ "${checkpoint.status}" ได้` }
+    }
+
+    if ((action === 'return' || action === 'problem') && checkpoint.status !== 'PROCESSING') {
+      return { can: false, reason: `ไม่สามารถ${action === 'return' ? 'ส่งกลับ' : 'รายงานปัญหา'} checkpoint ที่มีสถานะ "${checkpoint.status}" ได้` }
+    }
+
+    // Check sequential order for 'start' action
+    if (action === 'start') {
+      const currentIndex = checkpoints.findIndex(cp => cp.id === checkpoint.id)
+      if (currentIndex > 0) {
+        const previousCheckpoints = checkpoints.slice(0, currentIndex)
+        const incompletePrevious = previousCheckpoints.find(cp => cp.status !== 'COMPLETED')
+        if (incompletePrevious) {
+          return { can: false, reason: `ไม่สามารถเริ่ม checkpoint นี้ได้ เนื่องจาก checkpoint ก่อนหน้านี้ "${incompletePrevious.name}" ยังไม่เสร็จสิ้น` }
+        }
+      }
+    }
+
+    return { can: true }
+  }
+
+  // Check if checkpoint is blocked (waiting for previous)
+  const isBlocked = (checkpoint: Checkpoint): boolean => {
+    const currentIndex = checkpoints.findIndex(cp => cp.id === checkpoint.id)
+    if (currentIndex > 0) {
+      const previousCheckpoints = checkpoints.slice(0, currentIndex)
+      return previousCheckpoints.some(cp => cp.status !== 'COMPLETED')
+    }
+    return false
+  }
   if (isLoading) {
     return (
       <div className="w-full">
@@ -135,6 +189,13 @@ export function Timeline({ checkpoints, onCheckpointClick, selectedCheckpointId,
             const isProcessing = checkpoint.status === 'PROCESSING'
             const isPending = checkpoint.status === 'PENDING'
             const allPreviousCompleted = checkpoints.slice(0, index).every(cp => cp.status === 'COMPLETED')
+            const blocked = isBlocked(checkpoint)
+            
+            // Check permissions for actions
+            const canStart = canPerformAction(checkpoint, 'start')
+            const canComplete = canPerformAction(checkpoint, 'complete')
+            const canReturn = canPerformAction(checkpoint, 'return')
+            const canProblem = canPerformAction(checkpoint, 'problem')
 
             return (
               <div key={checkpoint.id} className="flex items-start gap-0 flex-shrink-0 p-6">
@@ -174,7 +235,8 @@ export function Timeline({ checkpoints, onCheckpointClick, selectedCheckpointId,
                     config.iconBg,
                     config.borderColor,
                     isCompleted && "shadow-lg",
-                    isProcessing && config.glow
+                    isProcessing && config.glow,
+                    blocked && !isCompleted && "opacity-60"
                   )}>
                     <Icon className={cn("h-7 w-7 z-10", config.iconColor)} />
                     
@@ -193,7 +255,14 @@ export function Timeline({ checkpoints, onCheckpointClick, selectedCheckpointId,
 
                     {/* Sparkle effect for selected */}
                     {isSelected && (
-                      <Sparkles className="absolute -top-1 -right-1 h-4 w-4 text-primary animate-pulse" />
+                      <Sparkles className="absolute -top-1 -right-1 h-4 w-4 text-primary animate-pulse z-20" />
+                    )}
+
+                    {/* Lock icon for blocked checkpoints - positioned at bottom right to avoid overlap */}
+                    {blocked && !isCompleted && (
+                      <div className="absolute -bottom-1 -right-1 bg-muted border-2 border-background rounded-full p-0.5 z-20 shadow-sm">
+                        <Lock className="h-3 w-3 text-muted-foreground" />
+                      </div>
                     )}
                   </div>
 
@@ -202,7 +271,8 @@ export function Timeline({ checkpoints, onCheckpointClick, selectedCheckpointId,
                   <div className="w-full text-center space-y-2">
                     <h4 className={cn(
                       "text-sm font-bold line-clamp-2 transition-colors leading-tight",
-                      isSelected ? "text-primary" : "text-foreground"
+                      isSelected ? "text-primary" : "text-foreground",
+                      blocked && !isCompleted && "opacity-60"
                     )}>
                       {checkpoint.name}
                     </h4>
@@ -213,11 +283,20 @@ export function Timeline({ checkpoints, onCheckpointClick, selectedCheckpointId,
                         "text-xs font-medium border",
                         config.bgColor,
                         config.iconColor,
-                        config.borderColor
+                        config.borderColor,
+                        blocked && !isCompleted && "opacity-60"
                       )}
                     >
                       {config.text}
                     </Badge>
+                    
+                    {/* Blocked indicator */}
+                    {blocked && !isCompleted && (
+                      <div className="mt-1.5 flex items-center justify-center gap-1 text-xs text-muted-foreground">
+                        <Lock className="h-3 w-3" />
+                        <span>รอ checkpoint ก่อนหน้า</span>
+                      </div>
+                    )}
                     
                     <div className="flex items-center justify-center gap-1 mt-2">
                       <div className={cn(
@@ -260,9 +339,16 @@ export function Timeline({ checkpoints, onCheckpointClick, selectedCheckpointId,
                               size="sm"
                               onClick={(e) => {
                                 e.stopPropagation()
-                                onCheckpointAction(checkpoint.id, 'start')
+                                if (canStart.can) {
+                                  onCheckpointAction(checkpoint.id, 'start')
+                                }
                               }}
-                              className="h-8 px-3 text-xs bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-sm"
+                              disabled={!canStart.can}
+                              className={cn(
+                                "h-8 px-3 text-xs bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-sm",
+                                !canStart.can && "opacity-50 cursor-not-allowed"
+                              )}
+                              title={canStart.reason}
                             >
                               <Play className="h-3 w-3 mr-1.5" />
                               เริ่ม
@@ -274,9 +360,16 @@ export function Timeline({ checkpoints, onCheckpointClick, selectedCheckpointId,
                                 size="sm"
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  onCheckpointAction(checkpoint.id, 'complete')
+                                  if (canComplete.can) {
+                                    onCheckpointAction(checkpoint.id, 'complete')
+                                  }
                                 }}
-                                className="h-8 px-3 text-xs bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-600 text-white shadow-sm"
+                                disabled={!canComplete.can}
+                                className={cn(
+                                  "h-8 px-3 text-xs bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-600 text-white shadow-sm",
+                                  !canComplete.can && "opacity-50 cursor-not-allowed"
+                                )}
+                                title={canComplete.reason}
                               >
                                 <CheckCircle2 className="h-3 w-3 mr-1.5" />
                                 เสร็จ
@@ -286,9 +379,16 @@ export function Timeline({ checkpoints, onCheckpointClick, selectedCheckpointId,
                                 variant="outline"
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  onCheckpointAction(checkpoint.id, 'return')
+                                  if (canReturn.can) {
+                                    onCheckpointAction(checkpoint.id, 'return')
+                                  }
                                 }}
-                                className="h-8 px-3 text-xs border-yellow-500/50 hover:border-yellow-500 hover:bg-yellow-500/10"
+                                disabled={!canReturn.can}
+                                className={cn(
+                                  "h-8 px-3 text-xs border-yellow-500/50 hover:border-yellow-500 hover:bg-yellow-500/10",
+                                  !canReturn.can && "opacity-50 cursor-not-allowed"
+                                )}
+                                title={canReturn.reason}
                               >
                                 <RotateCcw className="h-3 w-3 mr-1.5" />
                                 ส่งกลับ
@@ -298,9 +398,16 @@ export function Timeline({ checkpoints, onCheckpointClick, selectedCheckpointId,
                                 variant="outline"
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  onCheckpointAction(checkpoint.id, 'problem')
+                                  if (canProblem.can) {
+                                    onCheckpointAction(checkpoint.id, 'problem')
+                                  }
                                 }}
-                                className="h-8 px-3 text-xs border-red-500/50 hover:border-red-500 hover:bg-red-500/10"
+                                disabled={!canProblem.can}
+                                className={cn(
+                                  "h-8 px-3 text-xs border-red-500/50 hover:border-red-500 hover:bg-red-500/10",
+                                  !canProblem.can && "opacity-50 cursor-not-allowed"
+                                )}
+                                title={canProblem.reason}
                               >
                                 <AlertCircle className="h-3 w-3 mr-1.5" />
                                 ปัญหา
@@ -308,6 +415,16 @@ export function Timeline({ checkpoints, onCheckpointClick, selectedCheckpointId,
                             </>
                           )}
                         </div>
+                        {/* Show reason if action is disabled */}
+                        {((checkpoint.status === 'PENDING' && !canStart.can) ||
+                          (checkpoint.status === 'PROCESSING' && (!canComplete.can || !canReturn.can || !canProblem.can))) && (
+                          <p className="text-xs text-muted-foreground mt-2 text-center px-2">
+                            {checkpoint.status === 'PENDING' && canStart.reason}
+                            {checkpoint.status === 'PROCESSING' && (
+                              canComplete.reason || canReturn.reason || canProblem.reason
+                            )}
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>
