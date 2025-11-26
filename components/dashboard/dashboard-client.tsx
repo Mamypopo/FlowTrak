@@ -34,10 +34,10 @@ import { getDeadlineInfo, formatDeadline } from '@/lib/deadline-utils'
 import Link from 'next/link'
 
 const priorityColors = {
-  LOW: 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30',
-  MEDIUM: 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border-yellow-500/30',
-  HIGH: 'bg-orange-500/20 text-orange-600 dark:text-orange-400 border-orange-500/30',
-  URGENT: 'bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/30',
+  LOW: 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30 hover:bg-blue-500/30 hover:border-blue-500/50',
+  MEDIUM: 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/30 hover:border-yellow-500/50',
+  HIGH: 'bg-orange-500/20 text-orange-600 dark:text-orange-400 border-orange-500/30 hover:bg-orange-500/30 hover:border-orange-500/50',
+  URGENT: 'bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/30 hover:bg-red-500/30 hover:border-red-500/50',
 }
 
 const priorityLabels = {
@@ -50,27 +50,27 @@ const priorityLabels = {
 const statusConfig = {
   PENDING: { 
     icon: Clock, 
-    color: 'bg-gray-500/20 text-gray-600 dark:text-gray-400 border-gray-500/30',
+    color: 'bg-gray-500/20 text-gray-600 dark:text-gray-400 border-gray-500/30 hover:bg-gray-500/30 hover:border-gray-500/50',
     label: 'รอดำเนินการ' 
   },
   PROCESSING: { 
     icon: TrendingUp, 
-    color: 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30',
+    color: 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30 hover:bg-blue-500/30 hover:border-blue-500/50',
     label: 'กำลังดำเนินการ' 
   },
   COMPLETED: { 
     icon: CheckCircle2, 
-    color: 'bg-green-500/20 text-green-600 dark:text-green-400 border-green-500/30',
+    color: 'bg-green-500/20 text-green-600 dark:text-green-400 border-green-500/30 hover:bg-green-500/30 hover:border-green-500/50',
     label: 'เสร็จสิ้น' 
   },
   RETURNED: { 
     icon: RotateCcw, 
-    color: 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border-yellow-500/30',
+    color: 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/30 hover:border-yellow-500/50',
     label: 'ส่งกลับ' 
   },
   PROBLEM: { 
     icon: AlertTriangle, 
-    color: 'bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/30',
+    color: 'bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/30 hover:bg-red-500/30 hover:border-red-500/50',
     label: 'มีปัญหา' 
   },
 }
@@ -380,7 +380,13 @@ export function DashboardClient() {
                         <CardTitle className="text-lg line-clamp-2 group-hover:text-primary transition-colors">
                           {work.title}
                         </CardTitle>
-                        <Badge className={cn("shrink-0", priorityColors[work.priority])}>
+                        <Badge 
+                          variant="outline"
+                          className={cn(
+                            "shrink-0 transition-colors",
+                            priorityColors[work.priority]
+                          )}
+                        >
                           {priorityLabels[work.priority]}
                         </Badge>
                       </div>
@@ -393,7 +399,13 @@ export function DashboardClient() {
                           <Building2 className="h-4 w-4" />
                           <span className="line-clamp-1">{work.company}</span>
                         </div>
-                        <Badge className={cn("shrink-0", statusInfo.color)}>
+                        <Badge 
+                          variant="outline"
+                          className={cn(
+                            "shrink-0 transition-colors",
+                            statusInfo.color
+                          )}
+                        >
                           <StatusIcon className="h-3 w-3 mr-1" />
                           {statusInfo.label}
                         </Badge>

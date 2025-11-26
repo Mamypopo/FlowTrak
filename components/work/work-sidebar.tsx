@@ -19,10 +19,10 @@ interface WorkSidebarProps {
 }
 
 const priorityColors = {
-  LOW: 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30',
-  MEDIUM: 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border-yellow-500/30',
-  HIGH: 'bg-orange-500/20 text-orange-600 dark:text-orange-400 border-orange-500/30',
-  URGENT: 'bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/30',
+  LOW: 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30 hover:bg-blue-500/30 hover:border-blue-500/50',
+  MEDIUM: 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/30 hover:border-yellow-500/50',
+  HIGH: 'bg-orange-500/20 text-orange-600 dark:text-orange-400 border-orange-500/30 hover:bg-orange-500/30 hover:border-orange-500/50',
+  URGENT: 'bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/30 hover:bg-red-500/30 hover:border-red-500/50',
 }
 
 const priorityLabels = {
@@ -341,10 +341,13 @@ export function WorkSidebar({ selectedWorkId, onSelectWork }: WorkSidebarProps) 
                         )}>
                           {work.title}
                         </h4>
-                        <Badge className={cn(
-                          "shrink-0 text-[10px] px-1.5 py-0.5 font-medium border",
-                          priorityColors[work.priority]
-                        )}>
+                        <Badge 
+                          variant="outline"
+                          className={cn(
+                            "shrink-0 text-[10px] px-1.5 py-0.5 font-medium border transition-colors",
+                            priorityColors[work.priority]
+                          )}
+                        >
                           {priorityLabels[work.priority]}
                         </Badge>
                       </div>
