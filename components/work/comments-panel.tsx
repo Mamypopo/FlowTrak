@@ -27,7 +27,8 @@ import {
   FileText,
   X,
   Reply,
-  AtSign
+  AtSign,
+  Loader2
 } from 'lucide-react'
 import { useSocket } from '@/lib/socket-client'
 import { cn } from '@/lib/utils'
@@ -82,6 +83,7 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
   const [mentionQuery, setMentionQuery] = useState('')
   const [showMentionSuggestions, setShowMentionSuggestions] = useState(false)
   const [mentionPosition, setMentionPosition] = useState({ start: 0, end: 0 })
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const socket = useSocket()
   const commentsEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -235,7 +237,9 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
     e.preventDefault()
     const isWorkComment = activeTab === 'work'
     
-    if ((!message.trim() && !file)) return
+    if ((!message.trim() && !file) || isSubmitting) return
+
+    setIsSubmitting(true)
 
     const formData = new FormData()
     if (isWorkComment) {
@@ -302,6 +306,8 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
       }
     } catch (error) {
       console.error('Error posting comment:', error)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -432,23 +438,60 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
               {renderMessage(comment.message)}
             </div>
           )}
-          {comment.fileUrl && (
-            <a
-              href={comment.fileUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-primary hover:text-primary/80 p-2 sm:p-3 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 hover:from-primary/15 hover:to-primary/10 border border-primary/20 hover:border-primary/30 transition-all shadow-sm hover:shadow-md"
-            >
-              <Paperclip className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <span className="font-medium">ไฟล์แนบ</span>
-            </a>
-          )}
+          {comment.fileUrl && (() => {
+            const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(comment.fileUrl)
+            
+            if (isImage) {
+              return (
+                <div className="mt-2">
+                  <a
+                    href={comment.fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block group"
+                  >
+                    <img
+                      src={comment.fileUrl}
+                      alt="รูปภาพแนบ"
+                      className="max-w-[200px] sm:max-w-[250px] rounded-lg border border-border/50 shadow-sm hover:shadow-md transition-all group-hover:scale-105 object-cover"
+                      onError={(e) => {
+                        // Fallback to file link if image fails to load
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
+                        const parent = target.parentElement
+                        if (parent) {
+                          parent.innerHTML = `
+                            <a href="${comment.fileUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-primary hover:text-primary/80 p-2 sm:p-3 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 hover:from-primary/15 hover:to-primary/10 border border-primary/20 hover:border-primary/30 transition-all shadow-sm hover:shadow-md">
+                              <svg class="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+                              <span class="font-medium">ไฟล์แนบ</span>
+                            </a>
+                          `
+                        }
+                      }}
+                    />
+                  </a>
+                </div>
+              )
+            }
+            
+            return (
+              <a
+                href={comment.fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-primary hover:text-primary/80 p-2 sm:p-3 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 hover:from-primary/15 hover:to-primary/10 border border-primary/20 hover:border-primary/30 transition-all shadow-sm hover:shadow-md"
+              >
+                <Paperclip className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="font-medium">ไฟล์แนบ</span>
+              </a>
+            )
+          })()}
           {!isReply && (
             <Button
               variant="ghost"
               size="sm"
               onClick={() => handleReplyClick(comment)}
-              className="h-6 sm:h-7 px-1.5 sm:px-2 text-[10px] sm:text-xs text-muted-foreground hover:text-primary"
+              className="h-6 sm:h-7 px-1.5 sm:px-2 text-[10px] sm:text-xs text-muted-foreground hover:text-primary mt-1"
             >
               <Reply className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1 sm:mr-1.5" />
               ตอบกลับ
@@ -699,10 +742,14 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
                   <Button
                     type="submit"
                     size="sm"
-                    className="h-7 w-7 sm:h-8 sm:w-8 sm:px-3 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm hover:shadow-md transition-all p-0 sm:p-auto"
+                    disabled={isSubmitting}
+                    className="h-7 w-7 sm:h-8 sm:w-8 p-0 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Send className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    <span className="hidden sm:inline ml-1.5">ส่ง</span>
+                    {isSubmitting ? (
+                      <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    )}
                   </Button>
                 )}
               </div>
