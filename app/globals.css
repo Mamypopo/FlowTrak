@@ -35,7 +35,7 @@
     --card-foreground: 0 0% 98%;
     --popover: 0 0% 13%;
     --popover-foreground: 0 0% 98%;
-    
+
     /* Primary Colors - Purple Theme */
     /* Option 1: Blue (macOS default) */
     /* --primary: 217.2 91.2% 59.8%; */
@@ -47,7 +47,7 @@
     /* --primary: 142.1 70.6% 45.3%; */
     /* Option 5: Orange/Amber (uncomment to use) */
     /* --primary: 24.6 95% 53.1%; */
-    
+
     --primary-foreground: 0 0% 11%;
     --secondary: 0 0% 18%; /* Dark gray for secondary elements */
     --secondary-foreground: 0 0% 98%;
@@ -69,5 +69,31 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
+  }
+
+  /* Dark mode scrollbar */
+  .dark ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/40;
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/60;
   }
 }

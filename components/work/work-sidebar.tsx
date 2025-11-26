@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { WorkOrder } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { format } from 'date-fns'
 import { th } from 'date-fns/locale'
-import { Search, Building2, CheckCircle2, Clock, AlertTriangle, TrendingUp } from 'lucide-react'
+import { Search, Building2, CheckCircle2, Clock, AlertTriangle, TrendingUp, Filter, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface WorkSidebarProps {
@@ -84,16 +84,7 @@ export function WorkSidebar({ selectedWorkId, onSelectWork }: WorkSidebarProps) 
   const [priorityFilter, setPriorityFilter] = useState<string>('all')
   const [departments, setDepartments] = useState<any[]>([])
 
-  useEffect(() => {
-    fetchWorkOrders()
-    fetchDepartments()
-  }, [])
-
-  useEffect(() => {
-    filterWorkOrders()
-  }, [searchTerm, departmentFilter, statusFilter, priorityFilter, workOrders])
-
-  const fetchWorkOrders = async () => {
+  const fetchWorkOrders = useCallback(async () => {
     const params = new URLSearchParams()
     if (departmentFilter !== 'all') params.append('departmentId', departmentFilter)
     if (statusFilter !== 'all') params.append('status', statusFilter)
@@ -104,17 +95,17 @@ export function WorkSidebar({ selectedWorkId, onSelectWork }: WorkSidebarProps) 
     if (data.workOrders) {
       setWorkOrders(data.workOrders)
     }
-  }
+  }, [departmentFilter, statusFilter, priorityFilter])
 
-  const fetchDepartments = async () => {
+  const fetchDepartments = useCallback(async () => {
     const res = await fetch('/api/department')
     const data = await res.json()
     if (data.departments) {
       setDepartments(data.departments)
     }
-  }
+  }, [])
 
-  const filterWorkOrders = () => {
+  const filterWorkOrders = useCallback(() => {
     let filtered = [...workOrders]
 
     if (searchTerm) {
@@ -126,77 +117,141 @@ export function WorkSidebar({ selectedWorkId, onSelectWork }: WorkSidebarProps) 
     }
 
     setFilteredOrders(filtered)
+  }, [searchTerm, workOrders])
+
+  useEffect(() => {
+    fetchWorkOrders()
+    fetchDepartments()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    fetchWorkOrders()
+  }, [fetchWorkOrders])
+
+  useEffect(() => {
+    filterWorkOrders()
+  }, [filterWorkOrders])
+
+  const hasActiveFilters = departmentFilter !== 'all' || statusFilter !== 'all' || priorityFilter !== 'all'
+  const clearFilters = () => {
+    setDepartmentFilter('all')
+    setStatusFilter('all')
+    setPriorityFilter('all')
   }
 
   return (
-    <div className="h-full flex flex-col bg-background py-4 pl-4 pr-3">
-      {/* Compact Header */}
-      <div className="mb-3">
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-          งานทั้งหมด
-        </h3>
-        <div className="relative">
-          <Search className="absolute left-2 top-2 h-3.5 w-3.5 text-muted-foreground" />
+    <div className="h-full flex flex-col bg-gradient-to-b from-background to-muted/10 py-3 px-3 md:px-4 overflow-hidden">
+      {/* Enhanced Header */}
+      <div className="mb-3 space-y-2.5">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+            <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+            งานทั้งหมด
+          </h3>
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className="text-[10px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+            >
+              <X className="h-3 w-3" />
+              ล้าง
+            </button>
+          )}
+        </div>
+        
+        {/* Enhanced Search */}
+        <div className="relative group">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <Input
-            placeholder="ค้นหา..."
+            placeholder="ค้นหางาน..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-7 h-8 text-xs"
+            className="pl-8 pr-8 h-8 text-xs bg-card/50 border-border/50 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
           />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full hover:bg-muted flex items-center justify-center transition-colors"
+            >
+              <X className="h-3 w-3 text-muted-foreground" />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Compact Filters */}
-      <div className="space-y-1.5 mb-3">
-        <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-          <SelectTrigger className="h-8 text-xs">
-            <SelectValue placeholder="แผนก" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">ทั้งหมด</SelectItem>
-            {departments.map((dept) => (
-              <SelectItem key={dept.id} value={dept.id}>
-                {dept.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      {/* Enhanced Filters */}
+      <div className="space-y-2 mb-3">
+        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase tracking-wide">
+          <Filter className="h-3 w-3" />
+          <span>ตัวกรอง</span>
+        </div>
+        <div className="space-y-1.5">
+          <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+            <SelectTrigger className={cn(
+              "h-8 text-xs border-border/50 bg-card/50 hover:bg-card transition-colors",
+              departmentFilter !== 'all' && "border-primary/30 bg-primary/5"
+            )}>
+              <SelectValue placeholder="แผนก" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">ทั้งหมด</SelectItem>
+              {departments.map((dept) => (
+                <SelectItem key={dept.id} value={dept.id}>
+                  {dept.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="h-8 text-xs">
-            <SelectValue placeholder="สถานะ" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">ทั้งหมด</SelectItem>
-            <SelectItem value="PENDING">รอดำเนินการ</SelectItem>
-            <SelectItem value="PROCESSING">กำลังดำเนินการ</SelectItem>
-            <SelectItem value="COMPLETED">เสร็จสิ้น</SelectItem>
-            <SelectItem value="PROBLEM">มีปัญหา</SelectItem>
-          </SelectContent>
-        </Select>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className={cn(
+              "h-8 text-xs border-border/50 bg-card/50 hover:bg-card transition-colors",
+              statusFilter !== 'all' && "border-primary/30 bg-primary/5"
+            )}>
+              <SelectValue placeholder="สถานะ" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">ทั้งหมด</SelectItem>
+              <SelectItem value="PENDING">รอดำเนินการ</SelectItem>
+              <SelectItem value="PROCESSING">กำลังดำเนินการ</SelectItem>
+              <SelectItem value="COMPLETED">เสร็จสิ้น</SelectItem>
+              <SelectItem value="PROBLEM">มีปัญหา</SelectItem>
+            </SelectContent>
+          </Select>
 
-        <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-          <SelectTrigger className="h-8 text-xs">
-            <SelectValue placeholder="ความสำคัญ" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">ทั้งหมด</SelectItem>
-            <SelectItem value="LOW">ต่ำ</SelectItem>
-            <SelectItem value="MEDIUM">ปานกลาง</SelectItem>
-            <SelectItem value="HIGH">สูง</SelectItem>
-            <SelectItem value="URGENT">ด่วน</SelectItem>
-          </SelectContent>
-        </Select>
+          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+            <SelectTrigger className={cn(
+              "h-8 text-xs border-border/50 bg-card/50 hover:bg-card transition-colors",
+              priorityFilter !== 'all' && "border-primary/30 bg-primary/5"
+            )}>
+              <SelectValue placeholder="ความสำคัญ" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">ทั้งหมด</SelectItem>
+              <SelectItem value="LOW">ต่ำ</SelectItem>
+              <SelectItem value="MEDIUM">ปานกลาง</SelectItem>
+              <SelectItem value="HIGH">สูง</SelectItem>
+              <SelectItem value="URGENT">ด่วน</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      {/* Work List - Compact */}
-      <div className="flex-1 overflow-y-auto -mr-1 pr-1">
+      {/* Work List - Enhanced */}
+      <div className="flex-1 overflow-y-auto -mr-1 pr-1 scrollbar-thin min-h-0">
         {filteredOrders.length === 0 ? (
-          <div className="p-3 text-center text-xs text-muted-foreground">
-            ไม่พบงาน
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+            <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
+              <Search className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <p className="text-xs font-medium text-muted-foreground mb-1">ไม่พบงาน</p>
+            <p className="text-[10px] text-muted-foreground/80">
+              {searchTerm || hasActiveFilters ? 'ลองเปลี่ยนคำค้นหาหรือตัวกรอง' : 'ยังไม่มีงานในระบบ'}
+            </p>
           </div>
         ) : (
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             {filteredOrders.map((work) => {
               const status = getWorkStatus(work)
               const progress = getWorkProgress(work)
@@ -208,55 +263,74 @@ export function WorkSidebar({ selectedWorkId, onSelectWork }: WorkSidebarProps) 
                 <Card
                   key={work.id}
                   className={cn(
-                    "cursor-pointer transition-all duration-200 border-2 rounded-lg",
+                    "cursor-pointer transition-all duration-300 border rounded-xl overflow-hidden group",
+                    "hover:shadow-md",
                     isSelected 
-                      ? "border-primary bg-primary/5 shadow-md ring-1 ring-primary/20" 
-                      : "border-border hover:border-primary/50 hover:bg-accent/50 shadow-sm"
+                      ? "border-primary/50 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent shadow-lg ring-2 ring-primary/20" 
+                      : "border-border/50 bg-card/50 hover:border-primary/30 hover:bg-card shadow-sm"
                   )}
                   onClick={() => onSelectWork(work.id)}
                 >
                   <CardContent className="p-3">
-                    <div className="space-y-2">
-                      {/* Header - Compact */}
+                    <div className="space-y-2.5">
+                      {/* Header - Enhanced */}
                       <div className="flex items-start justify-between gap-2">
                         <h4 className={cn(
                           "font-semibold text-xs line-clamp-2 flex-1 leading-tight transition-colors",
-                          isSelected && "text-primary"
+                          isSelected ? "text-primary" : "text-foreground group-hover:text-primary/80"
                         )}>
                           {work.title}
                         </h4>
-                        <Badge className={cn("shrink-0 text-[10px] px-1.5 py-0", priorityColors[work.priority])}>
+                        <Badge className={cn(
+                          "shrink-0 text-[10px] px-1.5 py-0.5 font-medium border",
+                          priorityColors[work.priority]
+                        )}>
                           {priorityLabels[work.priority]}
                         </Badge>
                       </div>
 
-                      {/* Company - Compact */}
+                      {/* Company - Enhanced */}
                       <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                        <Building2 className="h-3 w-3 shrink-0" />
+                        <Building2 className="h-3 w-3 shrink-0 text-primary/60" />
                         <span className="line-clamp-1 truncate">{work.company}</span>
                       </div>
 
-                      {/* Status & Progress - Compact */}
-                      <div className="space-y-1.5">
+                      {/* Status & Progress - Enhanced */}
+                      <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1.5">
-                            <div className={cn("h-4 w-4 rounded-full flex items-center justify-center shrink-0", statusInfo.bgColor)}>
+                            <div className={cn(
+                              "h-4 w-4 rounded-full flex items-center justify-center shrink-0 transition-all",
+                              statusInfo.bgColor,
+                              isSelected && "ring-2 ring-primary/30"
+                            )}>
                               <StatusIcon className={cn("h-2.5 w-2.5", statusInfo.color)} />
                             </div>
-                            <span className="text-[10px] text-muted-foreground">{statusInfo.label}</span>
+                            <span className="text-[10px] font-medium text-muted-foreground">
+                              {statusInfo.label}
+                            </span>
                           </div>
-                          <span className="text-[10px] font-medium">{progress}%</span>
+                          <span className={cn(
+                            "text-[10px] font-bold px-1.5 py-0.5 rounded-md",
+                            status === 'COMPLETED' ? "bg-green-500/10 text-green-600 dark:text-green-400" :
+                            status === 'PROCESSING' ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" :
+                            status === 'PROBLEM' ? "bg-red-500/10 text-red-600 dark:text-red-400" :
+                            "bg-muted text-muted-foreground"
+                          )}>
+                            {progress}%
+                          </span>
                         </div>
                         
-                        {/* Progress Bar - Compact */}
+                        {/* Progress Bar - Enhanced */}
                         {work.checkpoints && work.checkpoints.length > 0 && (
-                          <div className="h-1 bg-muted rounded-full overflow-hidden">
+                          <div className="h-1.5 bg-muted/50 rounded-full overflow-hidden shadow-inner">
                             <div 
                               className={cn(
-                                "h-full transition-all duration-300",
-                                status === 'COMPLETED' ? "bg-green-500" : 
-                                status === 'PROCESSING' ? "bg-blue-500" :
-                                status === 'PROBLEM' ? "bg-red-500" : "bg-muted-foreground"
+                                "h-full transition-all duration-500 rounded-full shadow-sm",
+                                status === 'COMPLETED' ? "bg-gradient-to-r from-green-500 to-green-400" : 
+                                status === 'PROCESSING' ? "bg-gradient-to-r from-blue-500 to-blue-400" :
+                                status === 'PROBLEM' ? "bg-gradient-to-r from-red-500 to-red-400" : 
+                                "bg-gradient-to-r from-muted-foreground/50 to-muted-foreground/30"
                               )}
                               style={{ width: `${progress}%` }}
                             />
@@ -264,10 +338,15 @@ export function WorkSidebar({ selectedWorkId, onSelectWork }: WorkSidebarProps) 
                         )}
                       </div>
 
-                      {/* Footer - Compact */}
-                      <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-1.5 border-t">
-                        <span>{work.checkpoints?.length || 0} จุด</span>
-                        <span>{format(new Date(work.createdAt), 'dd MMM', { locale: th })}</span>
+                      {/* Footer - Enhanced */}
+                      <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-2 border-t border-border/50">
+                        <span className="flex items-center gap-1">
+                          <CheckCircle2 className="h-3 w-3" />
+                          {work.checkpoints?.length || 0} จุด
+                        </span>
+                        <span className="font-medium">
+                          {format(new Date(work.createdAt), 'dd MMM', { locale: th })}
+                        </span>
                       </div>
                     </div>
                   </CardContent>

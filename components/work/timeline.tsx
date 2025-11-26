@@ -90,22 +90,6 @@ export function Timeline({ checkpoints, onCheckpointClick, selectedCheckpointId 
 
   return (
     <div className="w-full">
-      {/* Progress Bar */}
-      <div className="mb-8 max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-muted-foreground">ความคืบหน้า</span>
-          <span className="text-sm font-semibold text-foreground">
-            {completedCount} / {checkpoints.length}
-          </span>
-        </div>
-        <div className="h-2 bg-muted rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-gradient-to-r from-primary to-primary/80 rounded-full transition-all duration-500 ease-out"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </div>
-
       {/* Timeline */}
       <div className="w-full overflow-x-auto pb-6">
         <div className="flex items-start justify-center gap-6 min-w-max px-4">

@@ -88,18 +88,21 @@ export function InfoPanel({ workOrder }: InfoPanelProps) {
   }
 
   return (
-    <div className="h-full flex flex-col bg-background py-4 pl-3 pr-4">
-      {/* Compact Header */}
-      <div className="mb-3">
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-          ข้อมูลงาน
-        </h3>
+    <div className="h-full flex flex-col bg-gradient-to-b from-background to-muted/10 py-3 px-3 md:px-4 overflow-hidden">
+      {/* Enhanced Header */}
+      <div className="mb-3 space-y-2.5">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+            <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+            ข้อมูลงาน
+          </h3>
+        </div>
         <h2 className="text-base font-bold line-clamp-2 leading-tight">{workOrder.title}</h2>
       </div>
 
-      <Card className="flex-1 flex flex-col rounded-lg border shadow-sm">
-        <Tabs defaultValue="details" className="flex-1 flex flex-col overflow-hidden">
-          <div className="px-3 pt-3 border-b">
+      <Card className="flex-1 flex flex-col rounded-lg border shadow-sm min-h-0">
+        <Tabs defaultValue="details" className="flex-1 flex flex-col overflow-hidden min-h-0">
+          <div className="px-3 pt-3 border-b shrink-0">
             <TabsList className="grid w-full grid-cols-3 h-8">
               <TabsTrigger value="details" className="text-xs">รายละเอียด</TabsTrigger>
               <TabsTrigger value="files" className="text-xs">ไฟล์</TabsTrigger>
@@ -107,7 +110,7 @@ export function InfoPanel({ workOrder }: InfoPanelProps) {
             </TabsList>
           </div>
 
-          <TabsContent value="details" className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
+          <TabsContent value="details" className="flex-1 overflow-y-auto px-3 py-3 space-y-3 min-h-0">
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <Building2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
@@ -168,7 +171,7 @@ export function InfoPanel({ workOrder }: InfoPanelProps) {
             </div>
           </TabsContent>
 
-          <TabsContent value="files" className="flex-1 overflow-y-auto px-3 py-3">
+          <TabsContent value="files" className="flex-1 overflow-y-auto px-3 py-3 min-h-0">
             {workOrder.attachments && workOrder.attachments.length > 0 ? (
               <div className="space-y-2">
                 {workOrder.attachments.map((attachment) => (
@@ -198,7 +201,7 @@ export function InfoPanel({ workOrder }: InfoPanelProps) {
             )}
           </TabsContent>
 
-          <TabsContent value="activity" className="flex-1 overflow-y-auto px-3 py-3">
+          <TabsContent value="activity" className="flex-1 overflow-y-auto px-3 py-3 min-h-0">
             {activityLogs.length > 0 ? (
               <div className="space-y-3">
                 {activityLogs.map((log) => (
