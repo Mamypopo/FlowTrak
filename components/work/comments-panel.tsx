@@ -489,9 +489,9 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
+    <div className="h-full md:h-full flex flex-col md:overflow-hidden bg-background">
       {/* Header */}
-      <div className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+      <div className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10 shrink-0">
         <div className="container mx-auto max-w-3xl px-6 py-4">
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'work' | 'checkpoint')}>
             <TabsList className="w-full justify-start bg-transparent h-auto p-0 gap-2">
@@ -521,7 +521,7 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
       </div>
 
       {/* Comments List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="container mx-auto max-w-3xl px-6 py-6">
           {isLoading ? (
             <div className="space-y-6">
@@ -556,7 +556,7 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
       </div>
 
       {/* Modern Input - Enhanced Design */}
-      <div className="border-t border-border/50 bg-card/80 backdrop-blur-sm sticky bottom-0 z-10">
+      <div className="border-t border-border/50 bg-card/80 backdrop-blur-sm sticky bottom-0 z-10 shrink-0">
         <div className="container mx-auto max-w-3xl px-4 md:px-6 py-3 md:py-4">
           <form onSubmit={handleSubmit} className="space-y-2.5">
             {/* File Preview */}

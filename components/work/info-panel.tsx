@@ -97,7 +97,7 @@ export function InfoPanel({ workOrder, onWorkOrderUpdate }: InfoPanelProps) {
   }
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-b from-background to-muted/10 py-3 px-3 md:px-4 overflow-hidden">
+    <div className="h-full md:h-full flex flex-col bg-gradient-to-b from-background to-muted/10 py-3 px-3 md:px-4 md:overflow-hidden">
       {/* Enhanced Header */}
       <div className="mb-3 space-y-2.5">
         <div className="flex items-center justify-between">

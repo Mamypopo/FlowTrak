@@ -164,12 +164,12 @@ export function WorkDetailClient({ workId }: WorkDetailClientProps) {
   }
 
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-background">
+    <div className="h-full md:h-screen flex flex-col md:overflow-hidden bg-background">
         {/* Timeline Section - Compact & Responsive */}
-        <div className="relative bg-gradient-to-b from-card via-card/98 to-background/95 border-b border-border/50 shadow-md overflow-hidden">
+        <div className="relative bg-gradient-to-b from-card via-card/98 to-background/95 border-b border-border/50 shadow-md md:overflow-hidden overflow-x-auto">
           {/* Decorative Background Elements */}
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 opacity-30" />
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 opacity-30 pointer-events-none" />
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent pointer-events-none" />
           
           <div className="relative container mx-auto px-3 sm:px-4 md:px-6 py-4 md:py-6">
             {/* Timeline */}
@@ -184,18 +184,18 @@ export function WorkDetailClient({ workId }: WorkDetailClientProps) {
           </div>
         </div>
 
-        {/* Bottom Section: Responsive Layout */}
-        <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-gradient-to-b from-background to-muted/20">
-          {/* Left - Job List (Hidden on mobile, visible on md+) */}
-          <div className="hidden md:block md:flex-shrink-0 md:w-[25%] lg:w-[24%] xl:w-[25%] md:max-w-[350px] lg:max-w-[380px] md:min-w-[260px] lg:min-w-[300px] border-r border-border/50 bg-gradient-to-b from-muted/40 to-muted/20 backdrop-blur-sm overflow-hidden">
+        {/* Desktop Layout: Fixed height with internal scrolling */}
+        <div className="hidden md:flex flex-1 min-h-0 flex-row overflow-hidden bg-gradient-to-b from-background to-muted/20">
+          {/* Left - Job List */}
+          <div className="flex-shrink-0 w-[25%] lg:w-[24%] xl:w-[25%] max-w-[350px] lg:max-w-[380px] min-w-[260px] lg:min-w-[300px] border-r border-border/50 bg-gradient-to-b from-muted/40 to-muted/20 backdrop-blur-sm overflow-hidden">
             <WorkSidebar
               selectedWorkId={workId}
               onSelectWork={handleSelectWork}
             />
           </div>
 
-          {/* Center - Comments (Full width on mobile, flex-1 on desktop) */}
-          <div className="flex-1 min-w-0 flex flex-col overflow-hidden bg-background/50 backdrop-blur-sm">
+          {/* Center - Comments */}
+          <div className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden bg-background/50 backdrop-blur-sm">
             <CommentsPanel
               checkpoint={selectedCheckpoint}
               workId={workId}
@@ -203,8 +203,8 @@ export function WorkDetailClient({ workId }: WorkDetailClientProps) {
             />
           </div>
 
-          {/* Right - Info (Hidden on mobile/tablet, visible on xl+) */}
-          <div className="hidden xl:block flex-shrink-0 w-[28%] max-w-[420px] min-w-[320px] border-l border-border/50 bg-gradient-to-b from-muted/30 to-muted/10 backdrop-blur-sm overflow-hidden">
+          {/* Right - Info */}
+          <div className="hidden xl:flex flex-shrink-0 w-[28%] max-w-[420px] min-w-[320px] min-h-0 border-l border-border/50 bg-gradient-to-b from-muted/30 to-muted/10 backdrop-blur-sm overflow-hidden">
             <InfoPanel 
               workOrder={workOrder} 
               onWorkOrderUpdate={fetchWorkOrder}
@@ -212,21 +212,29 @@ export function WorkDetailClient({ workId }: WorkDetailClientProps) {
           </div>
         </div>
 
-        {/* Mobile: Compact Stack layout */}
-        <div className="md:hidden border-t border-border/50 bg-muted/20">
-          <div className="p-3 space-y-3">
-            <WorkSidebar
-              selectedWorkId={workId}
-              onSelectWork={handleSelectWork}
-            />
-            {selectedCheckpoint && (
+        {/* Mobile Layout: Scrollable */}
+        <div className="md:hidden flex flex-col space-y-4 p-4">
+          <WorkSidebar
+            selectedWorkId={workId}
+            onSelectWork={handleSelectWork}
+          />
+          {workOrder && (
+            <div className="border-t border-border/50 pt-4">
+              <InfoPanel 
+                workOrder={workOrder} 
+                onWorkOrderUpdate={fetchWorkOrder}
+              />
+            </div>
+          )}
+          {selectedCheckpoint && (
+            <div className="border-t border-border/50 pt-4">
               <CommentsPanel
                 checkpoint={selectedCheckpoint}
                 workId={workId}
                 workOrder={workOrder}
               />
-            )}
-          </div>
+            </div>
+          )}
         </div>
     </div>
   )
