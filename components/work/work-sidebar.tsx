@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton'
 import { format } from 'date-fns'
 import { th } from 'date-fns/locale'
-import { Search, Building2, CheckCircle2, Clock, AlertTriangle, TrendingUp, Filter, X, ChevronDown, ChevronUp } from 'lucide-react'
+import { Search, Building2, CheckCircle2, Clock, AlertTriangle, TrendingUp, Filter, X, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react'
+import { getDeadlineInfo } from '@/lib/deadline-utils'
 import { cn } from '@/lib/utils'
 
 interface WorkSidebarProps {
@@ -398,14 +399,36 @@ export function WorkSidebar({ selectedWorkId, onSelectWork }: WorkSidebarProps) 
                       </div>
 
                       {/* Footer - Enhanced */}
-                      <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-2 border-t border-border/50">
-                        <span className="flex items-center gap-1">
-                          <CheckCircle2 className="h-3 w-3" />
-                          {work.checkpoints?.length || 0} จุด
-                        </span>
-                        <span className="font-medium">
-                          {format(new Date(work.createdAt), 'dd MMM', { locale: th })}
-                        </span>
+                      <div className="space-y-1.5 pt-2 border-t border-border/50">
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <CheckCircle2 className="h-3 w-3" />
+                            {work.checkpoints?.length || 0} จุด
+                          </span>
+                          <span className="font-medium">
+                            {format(new Date(work.createdAt), 'dd MMM', { locale: th })}
+                          </span>
+                        </div>
+                        {work.deadline && (() => {
+                          const deadlineInfo = getDeadlineInfo(work.deadline)
+                          if (!deadlineInfo) return null
+                          return (
+                            <div className={cn(
+                              "flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-medium",
+                              deadlineInfo.bgColor,
+                              deadlineInfo.color,
+                              deadlineInfo.borderColor,
+                              deadlineInfo.isUrgent && "animate-pulse"
+                            )}>
+                              {deadlineInfo.isOverdue ? (
+                                <AlertCircle className={cn("h-2.5 w-2.5", deadlineInfo.iconColor)} />
+                              ) : (
+                                <Clock className={cn("h-2.5 w-2.5", deadlineInfo.iconColor)} />
+                              )}
+                              <span className="line-clamp-1">{deadlineInfo.remaining}</span>
+                            </div>
+                          )
+                        })()}
                       </div>
                     </div>
                   </CardContent>

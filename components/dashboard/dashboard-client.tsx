@@ -30,6 +30,7 @@ import { useSocket } from '@/lib/socket-client'
 import { format } from 'date-fns'
 import { th } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
+import { getDeadlineInfo, formatDeadline } from '@/lib/deadline-utils'
 import Link from 'next/link'
 
 const priorityColors = {
@@ -457,17 +458,39 @@ export function DashboardClient() {
                       )}
 
                       {/* Footer */}
-                      <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t">
-                        <div className="flex items-center gap-1">
-                          <User className="h-3 w-3" />
-                          <span>{work.createdBy?.name || 'ไม่ทราบ'}</span>
-                        </div>
-                        {work.deadline && (
+                      <div className="space-y-2 pt-2 border-t">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
                           <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            <span>{format(new Date(work.deadline), 'dd MMM', { locale: th })}</span>
+                            <User className="h-3 w-3" />
+                            <span>{work.createdBy?.name || 'ไม่ทราบ'}</span>
                           </div>
-                        )}
+                          {work.deadline && (
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              <span>{format(new Date(work.deadline), 'dd MMM', { locale: th })}</span>
+                            </div>
+                          )}
+                        </div>
+                        {work.deadline && (() => {
+                          const deadlineInfo = getDeadlineInfo(work.deadline)
+                          if (!deadlineInfo) return null
+                          return (
+                            <div className={cn(
+                              "flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs font-medium",
+                              deadlineInfo.bgColor,
+                              deadlineInfo.color,
+                              deadlineInfo.borderColor,
+                              deadlineInfo.isUrgent && "animate-pulse"
+                            )}>
+                              {deadlineInfo.isOverdue ? (
+                                <AlertCircle className={cn("h-3 w-3", deadlineInfo.iconColor)} />
+                              ) : (
+                                <Clock className={cn("h-3 w-3", deadlineInfo.iconColor)} />
+                              )}
+                              <span>{deadlineInfo.remaining}</span>
+                            </div>
+                          )
+                        })()}
                       </div>
                     </CardContent>
                   </Card>

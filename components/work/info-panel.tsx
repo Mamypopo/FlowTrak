@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { format } from 'date-fns'
 import { th } from 'date-fns/locale'
-import { FileText, Clock, User, Activity, Download, Building2 } from 'lucide-react'
+import { FileText, Clock, User, Activity, Download, Building2, AlertCircle } from 'lucide-react'
+import { getDeadlineInfo, formatDeadline } from '@/lib/deadline-utils'
 import { useState, useEffect, useCallback } from 'react'
 import { useSocket } from '@/lib/socket-client'
 import { cn } from '@/lib/utils'
@@ -176,17 +177,38 @@ export function InfoPanel({ workOrder, onWorkOrderUpdate }: InfoPanelProps) {
             </div>
 
             {/* Deadline */}
-            {workOrder.deadline && (
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                  <span className="text-xs font-semibold text-foreground">กำหนดส่ง</span>
+            {workOrder.deadline && (() => {
+              const deadlineInfo = getDeadlineInfo(workOrder.deadline)
+              return (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <span className="text-xs font-semibold text-foreground">กำหนดส่ง</span>
+                  </div>
+                  <div className="pl-5.5 space-y-1.5">
+                    <p className="text-xs text-muted-foreground">
+                      {formatDeadline(workOrder.deadline)}
+                    </p>
+                    {deadlineInfo && (
+                      <div className={cn(
+                        "flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-xs font-medium",
+                        deadlineInfo.bgColor,
+                        deadlineInfo.color,
+                        deadlineInfo.borderColor,
+                        deadlineInfo.isUrgent && "animate-pulse"
+                      )}>
+                        {deadlineInfo.isOverdue ? (
+                          <AlertCircle className={cn("h-3.5 w-3.5", deadlineInfo.iconColor)} />
+                        ) : (
+                          <Clock className={cn("h-3.5 w-3.5", deadlineInfo.iconColor)} />
+                        )}
+                        <span>{deadlineInfo.remaining}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground pl-5.5">
-                  {format(new Date(workOrder.deadline), 'dd MMM yyyy HH:mm', { locale: th })}
-                </p>
-              </div>
-            )}
+              )
+            })()}
 
             {/* Created By */}
             <div className="space-y-1.5">
