@@ -59,7 +59,7 @@ export function Nav() {
             >
               Dashboard
             </Link>
-            {user?.role === 'ADMIN' && (
+            {user && (
               <>
                 <Link
                   href="/admin/templates"
@@ -69,14 +69,16 @@ export function Nav() {
                 >
                   Templates
                 </Link>
-                <Link
-                  href="/admin/users"
-                  className={`text-sm font-medium transition-colors hover:text-primary ${
-                    pathname?.startsWith('/admin/users') ? 'text-primary' : 'text-muted-foreground'
-                  }`}
-                >
-                  Users
-                </Link>
+                {user.role === 'ADMIN' && (
+                  <Link
+                    href="/admin/users"
+                    className={`text-sm font-medium transition-colors hover:text-primary ${
+                      pathname?.startsWith('/admin/users') ? 'text-primary' : 'text-muted-foreground'
+                    }`}
+                  >
+                    Users
+                  </Link>
+                )}
                 <Link
                   href="/admin/departments"
                   className={`text-sm font-medium transition-colors hover:text-primary ${
@@ -132,7 +134,7 @@ export function Nav() {
             >
               Dashboard
             </Link>
-            {user?.role === 'ADMIN' && (
+            {user && (
               <>
                 <Link
                   href="/admin/templates"
@@ -141,13 +143,15 @@ export function Nav() {
                 >
                   Templates
                 </Link>
-                <Link
-                  href="/admin/users"
-                  className="block py-2 text-sm font-medium"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Users
-                </Link>
+                {user.role === 'ADMIN' && (
+                  <Link
+                    href="/admin/users"
+                    className="block py-2 text-sm font-medium"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Users
+                  </Link>
+                )}
                 <Link
                   href="/admin/departments"
                   className="block py-2 text-sm font-medium"

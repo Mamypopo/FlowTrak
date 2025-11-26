@@ -116,7 +116,11 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch('/api/admin/user')
+      const res = await fetch('/api/user')
+      if (!res.ok) {
+        console.error('Failed to fetch users:', res.status)
+        return
+      }
       const data = await res.json()
       if (data.users) {
         setUsers(data.users)
