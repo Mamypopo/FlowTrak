@@ -23,16 +23,58 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    const searchParams = request.nextUrl.searchParams
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
+    const search = searchParams.get('search') || ''
+    const role = searchParams.get('role') || ''
+    const departmentId = searchParams.get('departmentId') || ''
+
+    const skip = (page - 1) * limit
+
+    // Build where clause
+    const where: any = {}
+    
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' as const } },
+        { username: { contains: search, mode: 'insensitive' as const } },
+      ]
+    }
+
+    if (role) {
+      where.role = role
+    }
+
+    if (departmentId) {
+      where.departmentId = departmentId
+    }
+
+    // Get total count for pagination
+    const total = await prisma.user.count({ where })
+
+    // Get users with pagination
     const users = await prisma.user.findMany({
+      where,
       include: {
         department: true,
       },
       orderBy: {
         createdAt: 'desc',
       },
+      skip,
+      take: limit,
     })
 
-    return NextResponse.json({ users })
+    return NextResponse.json({ 
+      users,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      }
+    })
   } catch (error) {
     console.error('Get users error:', error)
     return NextResponse.json(
