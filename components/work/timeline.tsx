@@ -3,6 +3,7 @@
 import { Checkpoint } from '@/types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { CheckCircle2, Clock, AlertCircle, RotateCcw, TrendingUp, Sparkles, Play } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
@@ -13,6 +14,7 @@ interface TimelineProps {
   onCheckpointClick?: (checkpoint: Checkpoint) => void
   selectedCheckpointId?: string
   onCheckpointAction?: (checkpointId: string, action: string) => void
+  isLoading?: boolean
 }
 
 const statusConfig = {
@@ -73,7 +75,36 @@ const statusConfig = {
   },
 }
 
-export function Timeline({ checkpoints, onCheckpointClick, selectedCheckpointId, onCheckpointAction }: TimelineProps) {
+export function Timeline({ checkpoints, onCheckpointClick, selectedCheckpointId, onCheckpointAction, isLoading }: TimelineProps) {
+  if (isLoading) {
+    return (
+      <div className="w-full">
+        <div className="w-full overflow-x-auto pb-6">
+          <div className="flex items-start justify-center gap-6 min-w-max px-4">
+            {[...Array(4)].map((_, index) => (
+              <div key={index} className="flex items-start gap-0 flex-shrink-0 p-6">
+                <div className="relative flex flex-col items-center w-64 p-5">
+                  {/* Icon Circle Skeleton */}
+                  <Skeleton className="h-14 w-14 rounded-full mb-3" />
+                  
+                  {/* Content Skeleton */}
+                  <div className="w-full text-center space-y-2">
+                    <Skeleton className="h-4 w-32 mx-auto" />
+                    <Skeleton className="h-5 w-20 mx-auto rounded-full" />
+                    <div className="flex items-center justify-center gap-1 mt-2">
+                      <Skeleton className="h-2 w-2 rounded-full" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (!checkpoints || checkpoints.length === 0) {
     return (
       <div className="w-full p-12 text-center">
