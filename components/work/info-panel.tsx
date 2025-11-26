@@ -32,6 +32,7 @@ const priorityLabels = {
 
 export function InfoPanel({ workOrder }: InfoPanelProps) {
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([])
+  const [isLoading, setIsLoading] = useState(false)
   const socket = useSocket()
 
   useEffect(() => {
@@ -63,14 +64,19 @@ export function InfoPanel({ workOrder }: InfoPanelProps) {
   const fetchActivityLogs = async () => {
     if (!workOrder) return
 
-    const res = await fetch(`/api/activity?limit=50`)
-    const data = await res.json()
-    if (data.logs) {
-      // Filter logs related to this work order
-      const filtered = data.logs.filter((log: ActivityLog) =>
-        log.details?.includes(workOrder.title)
-      )
-      setActivityLogs(filtered)
+    setIsLoading(true)
+    try {
+      const res = await fetch(`/api/activity?limit=50`)
+      const data = await res.json()
+      if (data.logs) {
+        // Filter logs related to this work order
+        const filtered = data.logs.filter((log: ActivityLog) =>
+          log.details?.includes(workOrder.title)
+        )
+        setActivityLogs(filtered)
+      }
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -202,7 +208,20 @@ export function InfoPanel({ workOrder }: InfoPanelProps) {
           </TabsContent>
 
           <TabsContent value="activity" className="flex-1 overflow-y-auto px-3 py-3 min-h-0">
-            {activityLogs.length > 0 ? (
+            {isLoading ? (
+              <div className="space-y-3">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="border-l-2 border-muted pl-3 pb-3 animate-pulse">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="h-3 w-20 bg-muted rounded" />
+                      <div className="h-2.5 w-24 bg-muted rounded" />
+                    </div>
+                    <div className="h-3 w-32 bg-muted rounded mb-1" />
+                    <div className="h-2.5 w-full bg-muted rounded" />
+                  </div>
+                ))}
+              </div>
+            ) : activityLogs.length > 0 ? (
               <div className="space-y-3">
                 {activityLogs.map((log) => (
                   <div key={log.id} className="border-l-2 border-primary/30 pl-3 pb-3">

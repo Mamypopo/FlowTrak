@@ -68,25 +68,36 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
   const [file, setFile] = useState<File | null>(null)
   const [fileName, setFileName] = useState('')
   const [isFocused, setIsFocused] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const socket = useSocket()
   const commentsEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const fetchWorkComments = async () => {
-    const res = await fetch(`/api/comment?workId=${workId}`)
-    const data = await res.json()
-    if (data.comments) {
-      setWorkComments(data.comments)
+    setIsLoading(true)
+    try {
+      const res = await fetch(`/api/comment?workId=${workId}`)
+      const data = await res.json()
+      if (data.comments) {
+        setWorkComments(data.comments)
+      }
+    } finally {
+      setIsLoading(false)
     }
   }
 
   const fetchCheckpointComments = async () => {
     if (!checkpoint) return
-    const res = await fetch(`/api/comment?checkpointId=${checkpoint.id}`)
-    const data = await res.json()
-    if (data.comments) {
-      setCheckpointComments(data.comments)
+    setIsLoading(true)
+    try {
+      const res = await fetch(`/api/comment?checkpointId=${checkpoint.id}`)
+      const data = await res.json()
+      if (data.comments) {
+        setCheckpointComments(data.comments)
+      }
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -290,7 +301,22 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
       {/* Comments List */}
       <div className="flex-1 overflow-y-auto">
         <div className="container mx-auto max-w-3xl px-6 py-6">
-          {activeTab === 'work' ? (
+          {isLoading ? (
+            <div className="space-y-6">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="flex gap-4 animate-pulse">
+                  <div className="h-10 w-10 rounded-full bg-muted shrink-0" />
+                  <div className="flex-1 space-y-2 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="h-4 w-24 bg-muted rounded" />
+                      <div className="h-3 w-20 bg-muted rounded" />
+                    </div>
+                    <div className="bg-muted/50 rounded-2xl rounded-tl-sm h-16 w-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : activeTab === 'work' ? (
             renderComments(workComments)
           ) : checkpoint ? (
             renderComments(checkpointComments)
@@ -307,33 +333,33 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
         </div>
       </div>
 
-      {/* Modern Input - Facebook/TikTok Style */}
-      <div className="border-t bg-card/50 backdrop-blur-sm sticky bottom-0 z-10">
-        <div className="container mx-auto max-w-3xl px-6 py-4">
-          <form onSubmit={handleSubmit} className="space-y-3">
+      {/* Modern Input - Enhanced Design */}
+      <div className="border-t border-border/50 bg-card/80 backdrop-blur-sm sticky bottom-0 z-10">
+        <div className="container mx-auto max-w-3xl px-4 md:px-6 py-3 md:py-4">
+          <form onSubmit={handleSubmit} className="space-y-2.5">
             {/* File Preview */}
             {file && (
-              <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-xl">
-                <Paperclip className="h-4 w-4 text-muted-foreground shrink-0" />
-                <span className="text-sm flex-1 truncate">{fileName}</span>
+              <div className="flex items-center gap-2 p-2.5 bg-primary/5 border border-primary/20 rounded-lg">
+                <Paperclip className="h-3.5 w-3.5 text-primary shrink-0" />
+                <span className="text-xs flex-1 truncate text-foreground">{fileName}</span>
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
                   onClick={removeFile}
-                  className="h-6 w-6 p-0 shrink-0"
+                  className="h-6 w-6 p-0 shrink-0 hover:bg-destructive/10 hover:text-destructive"
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-3.5 w-3.5" />
                 </Button>
               </div>
             )}
 
             {/* Input Container */}
             <div className={cn(
-              "relative flex items-end gap-2 p-3 rounded-2xl border-2 transition-all",
+              "relative flex items-end gap-2 p-2.5 rounded-xl border transition-all duration-200",
               isFocused 
-                ? "border-primary bg-background shadow-lg" 
-                : "border-border bg-muted/30"
+                ? "border-primary/50 bg-background shadow-md ring-1 ring-primary/20" 
+                : "border-border/50 bg-muted/30 hover:border-border hover:bg-muted/40"
             )}>
               {/* File Upload Button */}
               <Button
@@ -341,9 +367,9 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
                 variant="ghost"
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
-                className="h-9 w-9 p-0 shrink-0 rounded-full hover:bg-primary/10"
+                className="h-8 w-8 p-0 shrink-0 rounded-lg hover:bg-primary/10 transition-colors"
               >
-                <Paperclip className="h-5 w-5 text-muted-foreground" />
+                <Paperclip className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
               </Button>
               <input
                 ref={fileInputRef}
@@ -353,7 +379,7 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
               />
 
               {/* Textarea */}
-              <div className="flex-1 relative">
+              <div className="flex-1 relative min-w-0">
                 <textarea
                   ref={textareaRef}
                   value={message}
@@ -361,35 +387,30 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
                   onFocus={() => setIsFocused(true)}
                   onBlur={() => setIsFocused(false)}
                   placeholder={activeTab === 'work' ? 'เขียนคอมเมนต์ในงาน...' : 'เขียนคอมเมนต์ใน checkpoint...'}
-                  className="w-full resize-none bg-transparent border-0 focus:outline-none text-sm placeholder:text-muted-foreground max-h-[120px] overflow-y-auto"
+                  className="w-full resize-none bg-transparent border-0 focus:outline-none text-sm placeholder:text-muted-foreground/60 max-h-[120px] overflow-y-auto leading-relaxed"
                   rows={1}
                 />
               </div>
 
-              {/* Emoji Button (Placeholder) */}
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-9 w-9 p-0 shrink-0 rounded-full hover:bg-primary/10"
-              >
-                <Smile className="h-5 w-5 text-muted-foreground" />
-              </Button>
-
               {/* Send Button */}
-              <Button
-                type="submit"
-                size="sm"
-                disabled={!message.trim() && !file}
-                className={cn(
-                  "h-9 px-4 rounded-full shrink-0 transition-all",
-                  message.trim() || file
-                    ? "bg-primary hover:bg-primary/90 shadow-md"
-                    : "bg-muted text-muted-foreground"
-                )}
-              >
-                <Send className="h-4 w-4" />
-              </Button>
+              {message.trim() || file ? (
+                <Button
+                  type="submit"
+                  size="sm"
+                  className="h-8 px-3 rounded-lg shrink-0 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm hover:shadow-md transition-all"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 shrink-0 rounded-lg hover:bg-primary/10 transition-colors"
+                >
+                  <Smile className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+                </Button>
+              )}
             </div>
           </form>
         </div>

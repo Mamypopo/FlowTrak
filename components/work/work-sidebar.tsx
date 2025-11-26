@@ -83,17 +83,23 @@ export function WorkSidebar({ selectedWorkId, onSelectWork }: WorkSidebarProps) 
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [priorityFilter, setPriorityFilter] = useState<string>('all')
   const [departments, setDepartments] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   const fetchWorkOrders = useCallback(async () => {
-    const params = new URLSearchParams()
-    if (departmentFilter !== 'all') params.append('departmentId', departmentFilter)
-    if (statusFilter !== 'all') params.append('status', statusFilter)
-    if (priorityFilter !== 'all') params.append('priority', priorityFilter)
+    setIsLoading(true)
+    try {
+      const params = new URLSearchParams()
+      if (departmentFilter !== 'all') params.append('departmentId', departmentFilter)
+      if (statusFilter !== 'all') params.append('status', statusFilter)
+      if (priorityFilter !== 'all') params.append('priority', priorityFilter)
 
-    const res = await fetch(`/api/work?${params}`)
-    const data = await res.json()
-    if (data.workOrders) {
-      setWorkOrders(data.workOrders)
+      const res = await fetch(`/api/work?${params}`)
+      const data = await res.json()
+      if (data.workOrders) {
+        setWorkOrders(data.workOrders)
+      }
+    } finally {
+      setIsLoading(false)
     }
   }, [departmentFilter, statusFilter, priorityFilter])
 
@@ -240,7 +246,37 @@ export function WorkSidebar({ selectedWorkId, onSelectWork }: WorkSidebarProps) 
 
       {/* Work List - Enhanced */}
       <div className="flex-1 overflow-y-auto -mr-1 pr-1 scrollbar-thin min-h-0">
-        {filteredOrders.length === 0 ? (
+        {isLoading ? (
+          <div className="space-y-2">
+            {[...Array(5)].map((_, i) => (
+              <Card key={i} className="border rounded-xl overflow-hidden animate-pulse">
+                <CardContent className="p-3">
+                  <div className="space-y-2.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 space-y-2">
+                        <div className="h-3 bg-muted rounded w-3/4" />
+                        <div className="h-3 bg-muted rounded w-1/2" />
+                      </div>
+                      <div className="h-4 w-12 bg-muted rounded shrink-0" />
+                    </div>
+                    <div className="h-2.5 bg-muted rounded w-2/3" />
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="h-3 w-16 bg-muted rounded" />
+                        <div className="h-3 w-10 bg-muted rounded" />
+                      </div>
+                      <div className="h-1.5 bg-muted rounded-full" />
+                    </div>
+                    <div className="flex items-center justify-between pt-2 border-t">
+                      <div className="h-2.5 w-12 bg-muted rounded" />
+                      <div className="h-2.5 w-16 bg-muted rounded" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : filteredOrders.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
             <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
               <Search className="h-6 w-6 text-muted-foreground" />
