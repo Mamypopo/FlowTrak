@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton'
 import { format } from 'date-fns'
 import { th } from 'date-fns/locale'
-import { Search, Building2, CheckCircle2, Clock, AlertTriangle, TrendingUp, Filter, X } from 'lucide-react'
+import { Search, Building2, CheckCircle2, Clock, AlertTriangle, TrendingUp, Filter, X, ChevronDown, ChevronUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface WorkSidebarProps {
@@ -85,6 +85,7 @@ export function WorkSidebar({ selectedWorkId, onSelectWork }: WorkSidebarProps) 
   const [priorityFilter, setPriorityFilter] = useState<string>('all')
   const [departments, setDepartments] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false)
 
   const fetchWorkOrders = useCallback(async () => {
     setIsLoading(true)
@@ -187,62 +188,83 @@ export function WorkSidebar({ selectedWorkId, onSelectWork }: WorkSidebarProps) 
         </div>
       </div>
 
-      {/* Enhanced Filters */}
+      {/* Enhanced Filters - Collapsible */}
       <div className="space-y-2 mb-3">
-        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase tracking-wide">
-          <Filter className="h-3 w-3" />
-          <span>ตัวกรอง</span>
-        </div>
-        <div className="space-y-1.5">
-          <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-            <SelectTrigger className={cn(
-              "h-8 text-xs border-border/50 bg-card/50 hover:bg-card transition-colors",
-              departmentFilter !== 'all' && "border-primary/30 bg-primary/5"
-            )}>
-              <SelectValue placeholder="แผนก" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">ทั้งหมด</SelectItem>
-              {departments.map((dept) => (
-                <SelectItem key={dept.id} value={dept.id}>
-                  {dept.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <button
+          onClick={() => setIsFiltersOpen(!isFiltersOpen)}
+          className={cn(
+            "w-full flex items-center justify-between gap-2 p-2 rounded-lg transition-all duration-200",
+            "hover:bg-muted/50 border border-transparent hover:border-border/50",
+            isFiltersOpen && "bg-muted/30 border-border/50"
+          )}
+        >
+          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase tracking-wide">
+            <Filter className="h-3 w-3" />
+            <span>ตัวกรอง</span>
+            {hasActiveFilters && (
+              <span className="ml-1 px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[9px] font-medium">
+                {[departmentFilter, statusFilter, priorityFilter].filter(f => f !== 'all').length}
+              </span>
+            )}
+          </div>
+          {isFiltersOpen ? (
+            <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+          )}
+        </button>
+        {isFiltersOpen && (
+          <div className="space-y-1.5 animate-in slide-in-from-top-2 duration-200">
+            <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+              <SelectTrigger className={cn(
+                "h-8 text-xs border-border/50 bg-card/50 hover:bg-card transition-colors",
+                departmentFilter !== 'all' && "border-primary/30 bg-primary/5"
+              )}>
+                <SelectValue placeholder="แผนก" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">ทั้งหมด</SelectItem>
+                {departments.map((dept) => (
+                  <SelectItem key={dept.id} value={dept.id}>
+                    {dept.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className={cn(
-              "h-8 text-xs border-border/50 bg-card/50 hover:bg-card transition-colors",
-              statusFilter !== 'all' && "border-primary/30 bg-primary/5"
-            )}>
-              <SelectValue placeholder="สถานะ" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">ทั้งหมด</SelectItem>
-              <SelectItem value="PENDING">รอดำเนินการ</SelectItem>
-              <SelectItem value="PROCESSING">กำลังดำเนินการ</SelectItem>
-              <SelectItem value="COMPLETED">เสร็จสิ้น</SelectItem>
-              <SelectItem value="PROBLEM">มีปัญหา</SelectItem>
-            </SelectContent>
-          </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className={cn(
+                "h-8 text-xs border-border/50 bg-card/50 hover:bg-card transition-colors",
+                statusFilter !== 'all' && "border-primary/30 bg-primary/5"
+              )}>
+                <SelectValue placeholder="สถานะ" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">ทั้งหมด</SelectItem>
+                <SelectItem value="PENDING">รอดำเนินการ</SelectItem>
+                <SelectItem value="PROCESSING">กำลังดำเนินการ</SelectItem>
+                <SelectItem value="COMPLETED">เสร็จสิ้น</SelectItem>
+                <SelectItem value="PROBLEM">มีปัญหา</SelectItem>
+              </SelectContent>
+            </Select>
 
-          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className={cn(
-              "h-8 text-xs border-border/50 bg-card/50 hover:bg-card transition-colors",
-              priorityFilter !== 'all' && "border-primary/30 bg-primary/5"
-            )}>
-              <SelectValue placeholder="ความสำคัญ" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">ทั้งหมด</SelectItem>
-              <SelectItem value="LOW">ต่ำ</SelectItem>
-              <SelectItem value="MEDIUM">ปานกลาง</SelectItem>
-              <SelectItem value="HIGH">สูง</SelectItem>
-              <SelectItem value="URGENT">ด่วน</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+              <SelectTrigger className={cn(
+                "h-8 text-xs border-border/50 bg-card/50 hover:bg-card transition-colors",
+                priorityFilter !== 'all' && "border-primary/30 bg-primary/5"
+              )}>
+                <SelectValue placeholder="ความสำคัญ" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">ทั้งหมด</SelectItem>
+                <SelectItem value="LOW">ต่ำ</SelectItem>
+                <SelectItem value="MEDIUM">ปานกลาง</SelectItem>
+                <SelectItem value="HIGH">สูง</SelectItem>
+                <SelectItem value="URGENT">ด่วน</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
 
       {/* Work List - Enhanced */}
