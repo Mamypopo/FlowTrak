@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Plus, Trash2, Edit, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react'
 import Swal from 'sweetalert2'
 import { getSwalConfig } from '@/lib/swal-config'
@@ -443,24 +444,24 @@ export function UsersClient() {
                   {[...Array(pagination.limit)].map((_, i) => (
                     <TableRow key={i}>
                       <TableCell>
-                        <div className="h-4 bg-muted rounded w-24 animate-pulse" />
+                        <Skeleton className="h-4 w-24" />
                       </TableCell>
                       <TableCell>
-                        <div className="h-4 bg-muted rounded w-20 animate-pulse" />
+                        <Skeleton className="h-4 w-20" />
                       </TableCell>
                       <TableCell>
-                        <div className="h-5 bg-muted rounded-full w-16 animate-pulse" />
+                        <Skeleton className="h-5 w-16 rounded-full" />
                       </TableCell>
                       <TableCell>
-                        <div className="h-4 bg-muted rounded w-20 animate-pulse" />
+                        <Skeleton className="h-4 w-20" />
                       </TableCell>
                       <TableCell>
-                        <div className="h-4 bg-muted rounded w-24 animate-pulse" />
+                        <Skeleton className="h-4 w-24" />
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <div className="h-8 w-8 bg-muted rounded animate-pulse" />
-                          <div className="h-8 w-8 bg-muted rounded animate-pulse" />
+                          <Skeleton className="h-8 w-8 rounded" />
+                          <Skeleton className="h-8 w-8 rounded" />
                         </div>
                       </TableCell>
                     </TableRow>

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
 import { format } from 'date-fns'
 import { th } from 'date-fns/locale'
 import { Search, Building2, CheckCircle2, Clock, AlertTriangle, TrendingUp, Filter, X } from 'lucide-react'
@@ -249,27 +250,27 @@ export function WorkSidebar({ selectedWorkId, onSelectWork }: WorkSidebarProps) 
         {isLoading ? (
           <div className="space-y-2">
             {[...Array(5)].map((_, i) => (
-              <Card key={i} className="border rounded-xl overflow-hidden animate-pulse">
+              <Card key={i} className="border rounded-xl overflow-hidden">
                 <CardContent className="p-3">
                   <div className="space-y-2.5">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 space-y-2">
-                        <div className="h-3 bg-muted rounded w-3/4" />
-                        <div className="h-3 bg-muted rounded w-1/2" />
+                        <Skeleton className="h-3 w-3/4" />
+                        <Skeleton className="h-3 w-1/2" />
                       </div>
-                      <div className="h-4 w-12 bg-muted rounded shrink-0" />
+                      <Skeleton className="h-4 w-12 shrink-0 rounded" />
                     </div>
-                    <div className="h-2.5 bg-muted rounded w-2/3" />
+                    <Skeleton className="h-2.5 w-2/3" />
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <div className="h-3 w-16 bg-muted rounded" />
-                        <div className="h-3 w-10 bg-muted rounded" />
+                        <Skeleton className="h-3 w-16 rounded" />
+                        <Skeleton className="h-3 w-10 rounded" />
                       </div>
-                      <div className="h-1.5 bg-muted rounded-full" />
+                      <Skeleton className="h-1.5 w-full rounded-full" />
                     </div>
                     <div className="flex items-center justify-between pt-2 border-t">
-                      <div className="h-2.5 w-12 bg-muted rounded" />
-                      <div className="h-2.5 w-16 bg-muted rounded" />
+                      <Skeleton className="h-2.5 w-12 rounded" />
+                      <Skeleton className="h-2.5 w-16 rounded" />
                     </div>
                   </div>
                 </CardContent>

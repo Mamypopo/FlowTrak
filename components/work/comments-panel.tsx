@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Skeleton } from '@/components/ui/skeleton'
 import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react'
 import { format } from 'date-fns'
 import { th } from 'date-fns/locale'
@@ -521,14 +522,14 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
           {isLoading ? (
             <div className="space-y-6">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="flex gap-4 animate-pulse">
-                  <div className="h-10 w-10 rounded-full bg-muted shrink-0" />
+                <div key={i} className="flex gap-4">
+                  <Skeleton className="h-10 w-10 rounded-full shrink-0" />
                   <div className="flex-1 space-y-2 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <div className="h-4 w-24 bg-muted rounded" />
-                      <div className="h-3 w-20 bg-muted rounded" />
+                      <Skeleton className="h-4 w-24 rounded" />
+                      <Skeleton className="h-3 w-20 rounded" />
                     </div>
-                    <div className="bg-muted/50 rounded-2xl rounded-tl-sm h-16 w-full" />
+                    <Skeleton className="h-16 w-full rounded-2xl rounded-tl-sm" />
                   </div>
                 </div>
               ))}

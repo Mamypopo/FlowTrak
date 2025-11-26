@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { format } from 'date-fns'
 import { th } from 'date-fns/locale'
 import { FileText, Clock, User, Activity, Download, Building2 } from 'lucide-react'
@@ -248,13 +249,13 @@ export function InfoPanel({ workOrder }: InfoPanelProps) {
             {isLoading ? (
               <div className="space-y-3">
                 {[...Array(5)].map((_, i) => (
-                  <div key={i} className="border-l-2 border-muted pl-4 pb-4 animate-pulse">
+                  <div key={i} className="border-l-2 border-muted pl-4 pb-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="h-3 w-20 bg-muted rounded" />
-                      <div className="h-2.5 w-24 bg-muted rounded" />
+                      <Skeleton className="h-3 w-20 rounded" />
+                      <Skeleton className="h-2.5 w-24 rounded" />
                     </div>
-                    <div className="h-3 w-32 bg-muted rounded mb-1" />
-                    <div className="h-2.5 w-full bg-muted rounded" />
+                    <Skeleton className="h-3 w-32 rounded mb-1" />
+                    <Skeleton className="h-2.5 w-full rounded" />
                   </div>
                 ))}
               </div>
