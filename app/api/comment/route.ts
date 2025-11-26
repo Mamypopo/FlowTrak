@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { emitToWork } from '@/lib/socket'
 import { z } from 'zod'
+import { writeFile, mkdir } from 'fs/promises'
+import { join } from 'path'
 
 const createCommentSchema = z.object({
   checkpointId: z.string().optional(),
@@ -131,11 +133,33 @@ export async function POST(request: NextRequest) {
 
     let fileUrl: string | undefined
 
-    // Handle file upload (simplified - in production, use proper file storage)
+    // Handle file upload
     if (file) {
-      // For now, we'll just store the filename
-      // In production, upload to S3, Cloudinary, etc.
-      fileUrl = `/uploads/${Date.now()}-${file.name}`
+      try {
+        // Create uploads directory if it doesn't exist
+        const uploadsDir = join(process.cwd(), 'uploads')
+        await mkdir(uploadsDir, { recursive: true })
+
+        // Generate unique filename
+        const timestamp = Date.now()
+        const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+        const fileName = `${timestamp}-${sanitizedFileName}`
+        const filePath = join(uploadsDir, fileName)
+
+        // Convert File to Buffer and save
+        const bytes = await file.arrayBuffer()
+        const buffer = Buffer.from(bytes)
+        await writeFile(filePath, buffer)
+
+        // Store URL for database
+        fileUrl = `/api/uploads/${fileName}`
+      } catch (error) {
+        console.error('File upload error:', error)
+        return NextResponse.json(
+          { error: 'ไม่สามารถอัปโหลดไฟล์ได้' },
+          { status: 500 }
+        )
+      }
     }
 
     // If replying, get parent comment's workId/checkpointId
