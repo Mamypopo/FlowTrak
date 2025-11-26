@@ -30,18 +30,17 @@ export function WorkDetailClient({ workId }: WorkDetailClientProps) {
     }
   }
 
-  const fetchWorkOrder = async () => {
+  const fetchWorkOrder = useCallback(async () => {
     const res = await fetch(`/api/work/${workId}`)
     const data = await res.json()
     if (data.workOrder) {
       setWorkOrder(data.workOrder)
     }
-  }
+  }, [workId])
 
   useEffect(() => {
     fetchWorkOrder()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workId])
+  }, [fetchWorkOrder])
 
   // Memoized event handler to prevent unnecessary re-renders
   const handleCheckpointUpdated = useCallback((updatedCheckpoint: Checkpoint) => {

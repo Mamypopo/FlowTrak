@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { CreateWorkDialog } from '@/components/work/create-work-dialog'
 import { WorkOrder, Checkpoint } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -86,16 +86,7 @@ export function DashboardClient() {
   const [isLoading, setIsLoading] = useState(true)
   const socket = useSocket()
 
-  useEffect(() => {
-    fetchWorkOrders()
-    fetchDepartments()
-  }, [])
-
-  useEffect(() => {
-    filterWorkOrders()
-  }, [searchTerm, departmentFilter, statusFilter, priorityFilter, workOrders])
-
-  const fetchWorkOrders = async () => {
+  const fetchWorkOrders = useCallback(async () => {
     try {
       setIsLoading(true)
       const params = new URLSearchParams()
@@ -113,9 +104,9 @@ export function DashboardClient() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [departmentFilter, statusFilter, priorityFilter])
 
-  const fetchDepartments = async () => {
+  const fetchDepartments = useCallback(async () => {
     try {
       const res = await fetch('/api/department')
       const data = await res.json()
@@ -125,9 +116,9 @@ export function DashboardClient() {
     } catch (error) {
       console.error('Error fetching departments:', error)
     }
-  }
+  }, [])
 
-  const filterWorkOrders = () => {
+  const filterWorkOrders = useCallback(() => {
     let filtered = [...workOrders]
 
     if (searchTerm) {
@@ -139,15 +130,30 @@ export function DashboardClient() {
     }
 
     setFilteredOrders(filtered)
-  }
+  }, [searchTerm, workOrders])
 
-  const getWorkProgress = (work: WorkOrder) => {
+  useEffect(() => {
+    fetchWorkOrders()
+    fetchDepartments()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    fetchWorkOrders()
+  }, [fetchWorkOrders])
+
+  useEffect(() => {
+    filterWorkOrders()
+  }, [filterWorkOrders])
+
+  // Memoized helper functions to avoid recreating on every render
+  const getWorkProgress = useCallback((work: WorkOrder) => {
     if (!work.checkpoints || work.checkpoints.length === 0) return 0
     const completed = work.checkpoints.filter(cp => cp.status === 'COMPLETED').length
     return Math.round((completed / work.checkpoints.length) * 100)
-  }
+  }, [])
 
-  const getWorkStatus = (work: WorkOrder) => {
+  const getWorkStatus = useCallback((work: WorkOrder) => {
     if (!work.checkpoints || work.checkpoints.length === 0) return 'PENDING'
     const allCompleted = work.checkpoints.every(cp => cp.status === 'COMPLETED')
     const hasProcessing = work.checkpoints.some(cp => cp.status === 'PROCESSING')
@@ -157,7 +163,25 @@ export function DashboardClient() {
     if (hasProblem) return 'PROBLEM'
     if (hasProcessing) return 'PROCESSING'
     return 'PENDING'
-  }
+  }, [])
+
+  // Memoized stats calculations
+  const stats = useMemo(() => {
+    if (isLoading || workOrders.length === 0) {
+      return {
+        total: 0,
+        processing: 0,
+        completed: 0,
+        problem: 0,
+      }
+    }
+    return {
+      total: workOrders.length,
+      processing: workOrders.filter(w => getWorkStatus(w) === 'PROCESSING').length,
+      completed: workOrders.filter(w => getWorkStatus(w) === 'COMPLETED').length,
+      problem: workOrders.filter(w => getWorkStatus(w) === 'PROBLEM').length,
+    }
+  }, [workOrders, isLoading, getWorkStatus])
 
   return (
     <div className="flex-1 container mx-auto p-6 space-y-6">
@@ -195,7 +219,7 @@ export function DashboardClient() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">งานทั้งหมด</p>
-                      <p className="text-2xl font-bold mt-1">{workOrders.length}</p>
+                      <p className="text-2xl font-bold mt-1">{stats.total}</p>
                     </div>
                     <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
                       <Building2 className="h-6 w-6 text-primary" />
@@ -209,9 +233,7 @@ export function DashboardClient() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">กำลังดำเนินการ</p>
-                      <p className="text-2xl font-bold mt-1">
-                        {workOrders.filter(w => getWorkStatus(w) === 'PROCESSING').length}
-                      </p>
+                      <p className="text-2xl font-bold mt-1">{stats.processing}</p>
                     </div>
                     <div className="h-12 w-12 rounded-full bg-blue-500/10 flex items-center justify-center">
                       <TrendingUp className="h-6 w-6 text-blue-500" />
@@ -225,9 +247,7 @@ export function DashboardClient() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">เสร็จสิ้น</p>
-                      <p className="text-2xl font-bold mt-1">
-                        {workOrders.filter(w => getWorkStatus(w) === 'COMPLETED').length}
-                      </p>
+                      <p className="text-2xl font-bold mt-1">{stats.completed}</p>
                     </div>
                     <div className="h-12 w-12 rounded-full bg-green-500/10 flex items-center justify-center">
                       <CheckCircle2 className="h-6 w-6 text-green-500" />
@@ -241,9 +261,7 @@ export function DashboardClient() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">มีปัญหา</p>
-                      <p className="text-2xl font-bold mt-1">
-                        {workOrders.filter(w => getWorkStatus(w) === 'PROBLEM').length}
-                      </p>
+                      <p className="text-2xl font-bold mt-1">{stats.problem}</p>
                     </div>
                     <div className="h-12 w-12 rounded-full bg-red-500/10 flex items-center justify-center">
                       <AlertTriangle className="h-6 w-6 text-red-500" />
