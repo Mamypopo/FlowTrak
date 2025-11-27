@@ -106,13 +106,11 @@ export function Timeline({ checkpoints, onCheckpointClick, selectedCheckpointId,
       return { can: false, reason: `ไม่สามารถ${action === 'return' ? 'ส่งกลับ' : 'รายงานปัญหา'} checkpoint ที่มีสถานะ "${checkpoint.status}" ได้` }
     }
 
-    // Check sequential order for 'start' action
-    // Sort checkpoints by order first
-    const sortedCheckpoints = [...checkpoints].sort((a, b) => (a.order || 0) - (b.order || 0))
+   
     if (action === 'start') {
-      const currentIndex = sortedCheckpoints.findIndex(cp => cp.id === checkpoint.id)
+      const currentIndex = checkpoints.findIndex(cp => cp.id === checkpoint.id)
       if (currentIndex > 0) {
-        const previousCheckpoints = sortedCheckpoints.slice(0, currentIndex)
+        const previousCheckpoints = checkpoints.slice(0, currentIndex)
         const incompletePrevious = previousCheckpoints.find(cp => cp.status !== 'COMPLETED')
         if (incompletePrevious) {
           return { can: false, reason: `ไม่สามารถเริ่ม checkpoint นี้ได้ เนื่องจาก checkpoint ก่อนหน้านี้ "${incompletePrevious.name}" ยังไม่เสร็จสิ้น` }
@@ -125,11 +123,10 @@ export function Timeline({ checkpoints, onCheckpointClick, selectedCheckpointId,
 
   // Check if checkpoint is blocked (waiting for previous)
   const isBlocked = (checkpoint: Checkpoint): boolean => {
-    // Sort checkpoints by order first
-    const sortedCheckpoints = [...checkpoints].sort((a, b) => (a.order || 0) - (b.order || 0))
-    const currentIndex = sortedCheckpoints.findIndex(cp => cp.id === checkpoint.id)
+    // API already sorts checkpoints by order, so use as-is
+    const currentIndex = checkpoints.findIndex(cp => cp.id === checkpoint.id)
     if (currentIndex > 0) {
-      const previousCheckpoints = sortedCheckpoints.slice(0, currentIndex)
+      const previousCheckpoints = checkpoints.slice(0, currentIndex)
       return previousCheckpoints.some(cp => cp.status !== 'COMPLETED')
     }
     return false
@@ -175,8 +172,8 @@ export function Timeline({ checkpoints, onCheckpointClick, selectedCheckpointId,
     )
   }
 
-  // Sort checkpoints by order to ensure correct sequence
-  const sortedCheckpoints = [...checkpoints].sort((a, b) => (a.order || 0) - (b.order || 0))
+  // API already sorts checkpoints by order: 'asc', so use as-is
+  const sortedCheckpoints = checkpoints
 
   // Find selected checkpoint for action buttons
   const selectedCheckpoint = sortedCheckpoints.find(cp => cp.id === selectedCheckpointId)

@@ -21,10 +21,10 @@ interface InfoPanelProps {
 }
 
 const priorityColors = {
-  LOW: 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30',
-  MEDIUM: 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border-yellow-500/30',
-  HIGH: 'bg-orange-500/20 text-orange-600 dark:text-orange-400 border-orange-500/30',
-  URGENT: 'bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/30',
+  LOW: 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30 hover:bg-blue-500/30 hover:border-blue-500/50',
+  MEDIUM: 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/30 hover:border-yellow-500/50',
+  HIGH: 'bg-orange-500/20 text-orange-600 dark:text-orange-400 border-orange-500/30 hover:bg-orange-500/30 hover:border-orange-500/50',
+  URGENT: 'bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/30 hover:bg-red-500/30 hover:border-red-500/50',
 }
 
 const priorityLabels = {
@@ -39,33 +39,12 @@ export function InfoPanel({ workOrder, onWorkOrderUpdate }: InfoPanelProps) {
   const [isLoading, setIsLoading] = useState(false)
   const socket = useSocket()
 
-  useEffect(() => {
-    if (workOrder) {
-      fetchActivityLogs()
-    } else {
-      setActivityLogs([])
-    }
-  }, [workOrder])
-
   // Memoized event handler to prevent unnecessary re-renders
   const handleActivityNew = useCallback((log: ActivityLog) => {
     setActivityLogs((prev) => [log, ...prev])
   }, [])
 
-  useEffect(() => {
-    if (socket && workOrder?.id) {
-      // Don't join room here - parent component (WorkDetailClient) already joined
-      // Just listen to events
-      socket.on('activity:new', handleActivityNew)
-
-      return () => {
-        socket.off('activity:new', handleActivityNew)
-        // Don't leave room here - parent component will handle it
-      }
-    }
-  }, [socket, workOrder?.id, handleActivityNew])
-
-  const fetchActivityLogs = async () => {
+  const fetchActivityLogs = useCallback(async () => {
     if (!workOrder) return
 
     setIsLoading(true)
@@ -82,7 +61,28 @@ export function InfoPanel({ workOrder, onWorkOrderUpdate }: InfoPanelProps) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [workOrder])
+
+  useEffect(() => {
+    if (workOrder) {
+      fetchActivityLogs()
+    } else {
+      setActivityLogs([])
+    }
+  }, [workOrder, fetchActivityLogs])
+
+  useEffect(() => {
+    if (socket && workOrder?.id) {
+      // Don't join room here - parent component (WorkDetailClient) already joined
+      // Just listen to events
+      socket.on('activity:new', handleActivityNew)
+
+      return () => {
+        socket.off('activity:new', handleActivityNew)
+        // Don't leave room here - parent component will handle it
+      }
+    }
+  }, [socket, workOrder?.id, handleActivityNew])
 
   if (!workOrder) {
     return (

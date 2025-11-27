@@ -89,7 +89,7 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const fetchWorkComments = async () => {
+  const fetchWorkComments = useCallback(async () => {
     setIsLoading(true)
     try {
       const res = await fetch(`/api/comment?workId=${workId}`)
@@ -100,9 +100,9 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [workId])
 
-  const fetchCheckpointComments = async () => {
+  const fetchCheckpointComments = useCallback(async () => {
     if (!checkpoint) return
     setIsLoading(true)
     try {
@@ -114,9 +114,9 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [checkpoint])
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const res = await fetch('/api/user')
       if (!res.ok) {
@@ -130,11 +130,11 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
     } catch (error) {
       console.error('Error fetching users:', error)
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchUsers()
-  }, [])
+  }, [fetchUsers])
 
   useEffect(() => {
     if (activeTab === 'work') {
@@ -142,8 +142,7 @@ export function CommentsPanel({ checkpoint, workId, workOrder }: CommentsPanelPr
     } else if (checkpoint) {
       fetchCheckpointComments()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, checkpoint, workId])
+  }, [activeTab, checkpoint, fetchWorkComments, fetchCheckpointComments])
 
   // Memoized event handler to prevent unnecessary re-renders
   const handleCommentNew = useCallback((newComment: Comment) => {

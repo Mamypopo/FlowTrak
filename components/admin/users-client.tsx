@@ -84,15 +84,6 @@ export function UsersClient() {
   }, [debouncedSearch, roleFilter, departmentFilter])
 
   useEffect(() => {
-    fetchUsers()
-    fetchDepartments()
-  }, [])
-
-  useEffect(() => {
-    fetchUsers()
-  }, [pagination.page, debouncedSearch, roleFilter, departmentFilter])
-
-  useEffect(() => {
     if (editingUser) {
       reset({
         username: editingUser.username,
@@ -128,7 +119,23 @@ export function UsersClient() {
       if (data.users) {
         setUsers(data.users)
         if (data.pagination) {
-          setPagination(data.pagination)
+          // Only update pagination if values actually changed to prevent infinite loop
+          setPagination(prev => {
+            if (
+              prev.page === data.pagination.page &&
+              prev.limit === data.pagination.limit &&
+              prev.total === data.pagination.total &&
+              prev.totalPages === data.pagination.totalPages
+            ) {
+              return prev
+            }
+            return {
+              page: data.pagination.page,
+              limit: data.pagination.limit,
+              total: data.pagination.total,
+              totalPages: data.pagination.totalPages,
+            }
+          })
         }
       }
     } catch (error) {
@@ -138,13 +145,24 @@ export function UsersClient() {
     }
   }, [pagination.page, pagination.limit, debouncedSearch, roleFilter, departmentFilter])
 
-  const fetchDepartments = async () => {
+  const fetchDepartments = useCallback(async () => {
     const res = await fetch('/api/department')
     const data = await res.json()
     if (data.departments) {
       setDepartments(data.departments)
     }
-  }
+  }, [])
+
+  // Initial fetch on mount
+  useEffect(() => {
+    fetchUsers()
+    fetchDepartments()
+  }, [fetchUsers, fetchDepartments])
+
+  // Refetch when filters change
+  useEffect(() => {
+    fetchUsers()
+  }, [fetchUsers])
 
   const onSubmit = async (data: any) => {
     try {
